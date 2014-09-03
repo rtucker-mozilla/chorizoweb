@@ -22,6 +22,24 @@ def load_user(id):
 def not_found(error):
     return make_response(jsonify( { 'error': 'Not found' } ), 404)
 
+@blueprint.route("/getsystemid/<hostname>/", methods=["GET"])
+def getsystemid(hostname):
+    ret = []
+    system = System.query.filter_by(hostname=hostname).first()
+    if not system:
+        system = System(hostname=hostname).save()
+
+    s_dict = {}
+    s_dict['id'] = system.id
+    s_dict['hostname'] = system.hostname
+    s_dict['created_at'] = system.created_at
+    ret.append(s_dict)
+    return jsonify({
+        'total_count': 1,
+        'limit': 1,
+        'offset': 0,
+        'system': s_dict}
+    )
 @blueprint.route("/system/", methods=["GET", "POST"])
 def system():
     ret = []
