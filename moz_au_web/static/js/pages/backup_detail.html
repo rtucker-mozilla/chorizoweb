@@ -1,0 +1,30 @@
+<a ng-init="init(5)" href="/">Home</a>
+<a href="/#/backups/{{ hostname }}/">Backups</a>
+<div ng-if="backups.length == 0">
+    <h3>No Backups for System</h3>
+</div>
+<div ng-if="backups.length > 0">
+    <h3>Backup log #{{ id }} on {{ hostname }}</h3>
+</div>
+<table style="margin-top: 55px;" ng-if="backups.length > 0" class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Return Code</th>
+        <th>Log Text</th>
+        <th>stdout</th>
+        <th>stderr</th>
+        <th>Created At</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="backup in backups">
+        <td>{{ backup.id }}</td>
+        <td>{{ backup.return_code }}</td>
+        <td>{{ backup.log_text }}</td>
+        <td>{{ backup.stdout }}</td>
+        <td>{{ backup.stderr }}</td>
+        <td>{{ backup.created_at }}</td>
+    </tr>
+    </tbody>
+</table>
