@@ -11,6 +11,7 @@ from moz_au_web.user.forms import RegisterForm
 from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
 from moz_au_web.system.models import System, SystemBackup, SystemBackupLog
+import json
 
 blueprint = Blueprint('api', __name__, static_folder="../static", url_prefix='/api')
 
@@ -21,6 +22,19 @@ def load_user(id):
 @blueprint.errorhandler(404)
 def not_found(error):
     return make_response(jsonify( { 'error': 'Not found' } ), 404)
+
+@blueprint.route("/logcapture/<id>/", methods=["GET", "POST"])
+def logcapture(id):
+    log_obj = json.loads(request.data)
+    system = System.get_by_id(id)
+    s = SystemBackupLog()
+    s.hostname = system.id
+    s.return_code = log_obj['return_code']
+    s.stdout = log_obj['stdout']
+    s.stderr = log_obj['stderr']
+    s.system_backup_id = 1
+    s.save()
+    return make_response('OK', 200)
 
 @blueprint.route("/getsystemid/<hostname>/", methods=["GET"])
 def getsystemid(hostname):
