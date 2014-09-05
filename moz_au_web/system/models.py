@@ -23,7 +23,6 @@ class SystemBackup(SurrogatePK, Model):
     __tablename__ = 'system_backups'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
     system = relationship("System", foreign_keys=[system_id], backref="backups")
-    backup_id = Column(db.Integer, nullable=False, default=1)
     """
         is_current
         0 = Completed

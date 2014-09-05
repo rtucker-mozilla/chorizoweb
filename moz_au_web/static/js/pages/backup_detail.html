@@ -22,7 +22,9 @@
         <td>{{ backup.id }}</td>
         <td>{{ backup.return_code }}</td>
         <td>{{ backup.log_text }}</td>
-        <td><pre>{{ backup.stdout }}</pre></td>
+        {{ backup.stdout.length }}
+        <td ng-if="backup.stdout.length"><pre>{{ backup.stdout }}</pre></td>
+        <td ng-if="!backup.stdout">&nbsp;</td>
         <td>{{ backup.stderr }}</td>
         <td>{{ backup.created_at }}</td>
     </tr>
