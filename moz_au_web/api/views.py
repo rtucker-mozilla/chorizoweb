@@ -100,15 +100,15 @@ def delete_system(id):
     return make_response(jsonify({'success': 'success'}), 200)
 
 
-@blueprint.route("/backups/<hostname>", methods=["GET", "POST"])
-def backups(hostname):
+@blueprint.route("/updates/<hostname>", methods=["GET", "POST"])
+def updates(hostname):
     ret = []
     limit=request.args.get('limit', 100)
     offset=request.args.get('offset', 0)
     s_system = System.query.filter_by(hostname=hostname).first()
-    backups = SystemBackup.query.filter(SystemBackup.system==s_system).order_by('-id').limit(limit).all()
+    updates = SystemBackup.query.filter(SystemBackup.system==s_system).order_by('-id').limit(limit).all()
     s_ret = []
-    for b in backups:
+    for b in updates:
         tmp = {}
         tmp['id'] = b.id
         tmp['created_at'] = b.created_at.strftime("%Y-%m-%d %H:%M:%S")
@@ -117,54 +117,54 @@ def backups(hostname):
         tmp['status'] = b.status_code
         s_ret.append(tmp)
 
-    total = len(s_system.backups)
+    total = len(s_system.updates)
     return jsonify({
         'total_count': total,
         'limit': limit,
         'offset': offset,
-        'backups': s_ret}
+        'updates': s_ret}
     )
-@blueprint.route("/backupdetail/<id>", methods=["GET", "POST"])
-def backupdetail(id):
-    s_backup = SystemBackup.get_by_id(id)
+@blueprint.route("/updatedetail/<id>", methods=["GET", "POST"])
+def updatedetail(id):
+    s_update = SystemBackup.get_by_id(id)
     ret = []
-    backups = SystemBackupLog.query.filter(SystemBackupLog.system_backup==s_backup).order_by('id').all()
+    updates = SystemBackupLog.query.filter(SystemBackupLog.system_update==s_update).order_by('id').all()
     s_ret = []
-    for b in backups:
+    for b in updates:
         tmp = {}
         tmp['id'] = b.id
         tmp['created_at'] = b.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        tmp['hostname'] = b.system_backup.system.hostname
+        tmp['hostname'] = b.system_update.system.hostname
         tmp['stdout'] = b.stdout
         tmp['log_text'] = b.log_text
         tmp['stderr'] = b.stderr
         tmp['return_code'] = b.return_code
         s_ret.append(tmp)
 
-    total = len(backups)
+    total = len(updates)
     try:
-        hostname = s_backup.system.hostname
+        hostname = s_update.system.hostname
     except (IndexError, AttributeError):
         hostname = ''
     return jsonify({
         'total_count': total,
         'hostname': hostname,
-        'backups': s_ret}
+        'updates': s_ret}
     )
 
-@blueprint.route("/recentbackupdetail/", methods=["GET"])
-def recentbackupdetail():
+@blueprint.route("/recentupdatedetail/", methods=["GET"])
+def recentupdatedetail():
     ret = []
     limit = request.args.get('limit', 20)
-    backups = SystemBackupLog.query.order_by('-id').limit(limit).all()
+    updates = SystemBackupLog.query.order_by('-id').limit(limit).all()
     s_ret = []
-    for b in backups:
+    for b in updates:
         tmp = {}
         tmp['id'] = b.id
-        tmp['backup_id'] = b.id
+        tmp['update_id'] = b.id
         tmp['created_at'] = b.created_at.strftime("%Y-%m-%d %H:%M:%S")
         try:
-            tmp['hostname'] = b.system_backup.system.hostname
+            tmp['hostname'] = b.system_update.system.hostname
         except AttributeError:
             tmp['hostname'] = ''
         #tmp['stdout'] = b.stdout
@@ -174,7 +174,7 @@ def recentbackupdetail():
         s_ret.append(tmp)
 
     return jsonify({
-        'backups': s_ret}
+        'updates': s_ret}
     )
 
 @blueprint.route("/logcapture/<id>/", methods=["GET", "POST"])
@@ -193,67 +193,67 @@ def logcapture(id):
         s.log_text = log_obj['log_text']
     except KeyError:
         pass
-    s.system_backup_id = id
+    s.system_update_id = id
     s.save()
     return make_response('OK', 200)
 
-@blueprint.route("/finishbackup/<id>/", methods=["GET", "POST"])
-def finishbackup(id):
-    current_backup = SystemBackup.get_by_id(id)
-    if current_backup and current_backup.is_current:
-        current_backup.is_current = False
-        current_backup.save()
-        backup_log = SystemBackupLog()
-        backup_log.system_backup_id = current_backup.id
-        backup_log.log_text = "Backup Finished"
-        backup_log.created_at = datetime.datetime.utcnow()
-        backup_log.return_code = 0
-        backup_log.save()
+@blueprint.route("/finishupdate/<id>/", methods=["GET", "POST"])
+def finishupdate(id):
+    current_update = SystemBackup.get_by_id(id)
+    if current_update and current_update.is_current:
+        current_update.is_current = False
+        current_update.save()
+        update_log = SystemBackupLog()
+        update_log.system_update_id = current_update.id
+        update_log.log_text = "Backup Finished"
+        update_log.created_at = datetime.datetime.utcnow()
+        update_log.return_code = 0
+        update_log.save()
     return make_response(
         jsonify(
             {
                 'total_count': 1,
                 'limit': 1,
                 'offset': 0,
-                'id': current_backup.id
+                'id': current_update.id
             }
         ), 200)
 
-@blueprint.route("/createbackup/<id>/", methods=["POST"])
-def createbackup(id):
-    current_backup = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
-    if current_backup:
-        current_backup.is_current = False
-        current_backup.save()
-    new_backup = SystemBackup(system_id=id, is_current=True, created_at=datetime.datetime.utcnow()).save()
-    backup_log = SystemBackupLog()
-    backup_log.system_backup_id = new_backup.id
-    backup_log.log_text = "Backup Started"
-    backup_log.system_id = id
-    backup_log.return_code = 0
-    backup_log.created_at = datetime.datetime.utcnow()
-    backup_log.save()
+@blueprint.route("/createupdate/<id>/", methods=["POST"])
+def createupdate(id):
+    current_update = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
+    if current_update:
+        current_update.is_current = False
+        current_update.save()
+    new_update = SystemBackup(system_id=id, is_current=True, created_at=datetime.datetime.utcnow()).save()
+    update_log = SystemBackupLog()
+    update_log.system_update_id = new_update.id
+    update_log.log_text = "Backup Started"
+    update_log.system_id = id
+    update_log.return_code = 0
+    update_log.created_at = datetime.datetime.utcnow()
+    update_log.save()
     return make_response(
         jsonify(
             {
                 'total_count': 1,
                 'limit': 1,
                 'offset': 0,
-                'id': new_backup.id
+                'id': new_update.id
             }
         ), 200)
-@blueprint.route("/currentbackupid/<id>/", methods=["GET", "POST"])
-def currentbackupid(id):
-    current_backup = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
-    if current_backup is None:
-        current_backup = SystemBackup(system_id=id).save()
+@blueprint.route("/currentupdateid/<id>/", methods=["GET", "POST"])
+def currentupdateid(id):
+    current_update = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
+    if current_update is None:
+        current_update = SystemBackup(system_id=id).save()
     return make_response(
         jsonify(
             {
             'total_count': 1,
             'limit': 1,
             'offset': 0,
-            'id': current_backup.id
+            'id': current_update.id
             }
         ), 200)
 
