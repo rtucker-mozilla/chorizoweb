@@ -8,13 +8,13 @@ mozAUApp.config(function($routeProvider){
     })
 
     // route for the about page
-    .when('/backups/:hostname', {
-        templateUrl : '/static/js/pages/backup_list.html',
+    .when('/updates/:hostname', {
+        templateUrl : '/static/js/pages/update_list.html',
         controller  : 'BackupListCtrl'
     })
 
-    .when('/backupdetail/:id', {
-        templateUrl : '/static/js/pages/backup_detail.html',
+    .when('/updatedetail/:id', {
+        templateUrl : '/static/js/pages/update_detail.html',
         controller  : 'BackupDetailCtrl'
     })
 
@@ -60,10 +60,10 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
     }
 
 
-    function recent_backups(limit){
+    function recent_updates(limit){
         log("Recent Backups Called");
-        $http.get('/api/recentbackupdetail/?limit=' + limit).success(function(data){
-            $scope.recent = data.backups;
+        $http.get('/api/recentupdatedetail/?limit=' + limit).success(function(data){
+            $scope.recent = data.updates;
         });
     }
 
@@ -82,10 +82,10 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
         if(!$scope.timer){
             $scope.timer = $interval(function(){
                 log("Timer Fired");
-                recent_backups(20);
+                recent_updates(20);
             }, 5000);
         }
-        recent_backups(20);
+        recent_updates(20);
     }
 
     $scope.$on('$destroy', function() {
@@ -98,27 +98,27 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
 
 mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
-    $scope.backups = [];
-    function build_backup_list(limit){
+    $scope.updates = [];
+    function build_update_list(limit){
         if (!limit){
             limit = 10;
         }
-        $http.get('/api/backups/' + $scope.hostname + '?limit=' + limit).success(function(data){
-            $scope.backups = data.backups;
+        $http.get('/api/updates/' + $scope.hostname + '?limit=' + limit).success(function(data){
+            $scope.updates = data.updates;
         });
     }
 
     $scope.init = function(limit){
-        build_backup_list(limit);
+        build_update_list(limit);
     }
 });
 mozAUApp.controller('BackupDetailCtrl', function ($scope, $http, $routeParams, $interval) {
     $scope.id = $routeParams['id'];
-    $scope.backups = [];
+    $scope.updates = [];
 
-    function build_backup_list(limit){
-        $http.get('/api/backupdetail/' + $scope.id).success(function(data){
-            $scope.backups = data.backups;
+    function build_update_list(limit){
+        $http.get('/api/updatedetail/' + $scope.id).success(function(data){
+            $scope.updates = data.updates;
             $scope.hostname = data['hostname']
         });
     }
@@ -126,11 +126,11 @@ mozAUApp.controller('BackupDetailCtrl', function ($scope, $http, $routeParams, $
     $scope.init = function(limit){
         if(!$scope.timer){
             $scope.timer = $interval(function(){
-                build_backup_list(1);
+                build_update_list(1);
             }, 5000);
 
         }
-        build_backup_list();
+        build_update_list();
     }
 
     $scope.$on('$destroy', function() {

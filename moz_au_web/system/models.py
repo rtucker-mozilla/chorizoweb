@@ -21,10 +21,10 @@ class System(SurrogatePK, Model):
     def __repr__(self):
         return '<System({hostname!r})>'.format(hostname=self.hostname)
 
-class SystemBackup(SurrogatePK, Model):
-    __tablename__ = 'system_backups'
+class SystemUpdate(SurrogatePK, Model):
+    __tablename__ = 'system_updates'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
-    system = relationship("System", foreign_keys=[system_id], backref="backups")
+    system = relationship("System", foreign_keys=[system_id], backref="updates")
     created_at = Column(db.DateTime, default=dt.datetime.utcnow())
     """
         is_current
@@ -40,10 +40,10 @@ class SystemBackup(SurrogatePK, Model):
     """
     status_code = Column(db.Integer, nullable=False, default=0)
 
-class SystemBackupLog(SurrogatePK, Model):
-    __tablename__ = 'system_backup_logs'
-    system_backup_id = Column(db.Integer, db.ForeignKey('system_backups.id'))
-    system_backup = relationship("SystemBackup", foreign_keys=[system_backup_id])
+class SystemUpdateLog(SurrogatePK, Model):
+    __tablename__ = 'system_update_logs'
+    system_update_id = Column(db.Integer, db.ForeignKey('system_updates.id'))
+    system_update = relationship("SystemUpdate", foreign_keys=[system_update_id])
     return_code = Column(db.Integer, nullable=True)
     stdout = Column(db.Text, nullable=True)
     stderr = Column(db.Text, nullable=True)

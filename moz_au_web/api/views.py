@@ -10,7 +10,7 @@ from moz_au_web.public.forms import LoginForm
 from moz_au_web.user.forms import RegisterForm
 from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
-from moz_au_web.system.models import System, SystemBackup, SystemBackupLog
+from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog
 import json
 import datetime
 
@@ -106,7 +106,7 @@ def updates(hostname):
     limit=request.args.get('limit', 100)
     offset=request.args.get('offset', 0)
     s_system = System.query.filter_by(hostname=hostname).first()
-    updates = SystemBackup.query.filter(SystemBackup.system==s_system).order_by('-id').limit(limit).all()
+    updates = SystemUpdate.query.filter(SystemUpdate.system==s_system).order_by('-id').limit(limit).all()
     s_ret = []
     for b in updates:
         tmp = {}
@@ -126,9 +126,9 @@ def updates(hostname):
     )
 @blueprint.route("/updatedetail/<id>", methods=["GET", "POST"])
 def updatedetail(id):
-    s_update = SystemBackup.get_by_id(id)
+    s_update = SystemUpdate.get_by_id(id)
     ret = []
-    updates = SystemBackupLog.query.filter(SystemBackupLog.system_update==s_update).order_by('id').all()
+    updates = SystemUpdateLog.query.filter(SystemUpdateLog.system_update==s_update).order_by('id').all()
     s_ret = []
     for b in updates:
         tmp = {}
@@ -156,7 +156,7 @@ def updatedetail(id):
 def recentupdatedetail():
     ret = []
     limit = request.args.get('limit', 20)
-    updates = SystemBackupLog.query.order_by('-id').limit(limit).all()
+    updates = SystemUpdateLog.query.order_by('-id').limit(limit).all()
     s_ret = []
     for b in updates:
         tmp = {}
@@ -180,7 +180,7 @@ def recentupdatedetail():
 @blueprint.route("/logcapture/<id>/", methods=["GET", "POST"])
 def logcapture(id):
     log_obj = json.loads(request.data)
-    s = SystemBackupLog()
+    s = SystemUpdateLog()
     s.return_code = log_obj['return_code']
     s.stdout = log_obj['stdout']
     s.stderr = log_obj['stderr']
@@ -199,13 +199,13 @@ def logcapture(id):
 
 @blueprint.route("/finishupdate/<id>/", methods=["GET", "POST"])
 def finishupdate(id):
-    current_update = SystemBackup.get_by_id(id)
+    current_update = SystemUpdate.get_by_id(id)
     if current_update and current_update.is_current:
         current_update.is_current = False
         current_update.save()
-        update_log = SystemBackupLog()
+        update_log = SystemUpdateLog()
         update_log.system_update_id = current_update.id
-        update_log.log_text = "Backup Finished"
+        update_log.log_text = "Update Finished"
         update_log.created_at = datetime.datetime.utcnow()
         update_log.return_code = 0
         update_log.save()
@@ -221,14 +221,14 @@ def finishupdate(id):
 
 @blueprint.route("/createupdate/<id>/", methods=["POST"])
 def createupdate(id):
-    current_update = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
+    current_update = SystemUpdate.query.filter_by(system_id=id).order_by('-id').first()
     if current_update:
         current_update.is_current = False
         current_update.save()
-    new_update = SystemBackup(system_id=id, is_current=True, created_at=datetime.datetime.utcnow()).save()
-    update_log = SystemBackupLog()
+    new_update = SystemUpdate(system_id=id, is_current=True, created_at=datetime.datetime.utcnow()).save()
+    update_log = SystemUpdateLog()
     update_log.system_update_id = new_update.id
-    update_log.log_text = "Backup Started"
+    update_log.log_text = "Update Started"
     update_log.system_id = id
     update_log.return_code = 0
     update_log.created_at = datetime.datetime.utcnow()
@@ -244,9 +244,9 @@ def createupdate(id):
         ), 200)
 @blueprint.route("/currentupdateid/<id>/", methods=["GET", "POST"])
 def currentupdateid(id):
-    current_update = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
+    current_update = SystemUpdate.query.filter_by(system_id=id).order_by('-id').first()
     if current_update is None:
-        current_update = SystemBackup(system_id=id).save()
+        current_update = SystemUpdate(system_id=id).save()
     return make_response(
         jsonify(
             {

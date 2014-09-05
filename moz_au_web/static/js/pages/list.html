@@ -8,7 +8,7 @@
         </thead>
         <tbody>
         <tr ng-repeat="system in systems | filter:query">
-            <td><a href="#backups/{{ system.hostname }}">{{ system.hostname }}</a></td>
+            <td><a href="#updates/{{ system.hostname }}">{{ system.hostname }}</a></td>
         </tr>
         </tbody>
     </table>
@@ -22,16 +22,16 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="backup in recent">
+        <tr ng-repeat="update in recent">
             <td>
-                {{ backup.created_at }}
+                {{ update.created_at }}
             </td>
-            <td><a href="#backups/{{ backup.hostname }}">{{ backup.hostname }}</a></td>
+            <td><a href="#updates/{{ update.hostname }}">{{ update.hostname }}</a></td>
             <td>
-                {{ backup.return_code }}
+                {{ update.return_code }}
             </td>
             <td>
-                {{ backup.log_text }}
+                {{ update.log_text }}
             </td>
         </tr>
         </tbody>

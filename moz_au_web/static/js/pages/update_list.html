@@ -1,0 +1,24 @@
+<a ng-init="init(5)" href="/">Home</a>
+<div ng-if="updates.length == 0">
+    <h3>No Backups for System</h3>
+</div>
+<table style="margin-top: 55px;" ng-if="updates.length > 0" class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th>Created At</th>
+        <th>Status</th>
+        <th>Current</th>
+        <th>ID</th>
+        <th>Hostname</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="update in updates">
+        <td><a href="#updatedetail/{{ update.id }}">{{ update.created_at }}</a></td>
+        <td>{{ update.status }}</td>
+        <td>{{ update.current }}</td>
+        <td>{{ update.id }}</td>
+        <td>{{ update.hostname }}</td>
+    </tr>
+    </tbody>
+</table>
