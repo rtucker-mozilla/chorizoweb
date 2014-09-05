@@ -54,7 +54,6 @@ class SurrogatePK(object):
     __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
 
     @classmethod
     def get_by_id(cls, id):

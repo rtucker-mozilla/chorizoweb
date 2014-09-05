@@ -12,6 +12,7 @@ from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
 from moz_au_web.system.models import System, SystemBackup, SystemBackupLog
 import json
+import datetime
 
 blueprint = Blueprint('api', __name__, static_folder="../static", url_prefix='/api')
 
@@ -73,6 +74,7 @@ def read_system(id):
 def create_system(hostname):
     s = System()
     s.hostname = hostname
+    s.created_at = datetime.datetime.utcnow()
     s.save()
     s_dict = {}
     s_dict['id'] = s.id
@@ -126,7 +128,7 @@ def backups(hostname):
 def backupdetail(id):
     s_backup = SystemBackup.get_by_id(id)
     ret = []
-    backups = SystemBackupLog.query.filter(SystemBackupLog.system_backup==s_backup).order_by('created_at').all()
+    backups = SystemBackupLog.query.filter(SystemBackupLog.system_backup==s_backup).order_by('id').all()
     s_ret = []
     for b in backups:
         tmp = {}
@@ -182,7 +184,15 @@ def logcapture(id):
     s.return_code = log_obj['return_code']
     s.stdout = log_obj['stdout']
     s.stderr = log_obj['stderr']
-    s.log_text = log_obj['log_text']
+    try:
+        s.log_text = log_obj['message']
+    except KeyError:
+        pass
+    s.created_at = datetime.datetime.utcnow()
+    try:
+        s.log_text = log_obj['log_text']
+    except KeyError:
+        pass
     s.system_backup_id = id
     s.save()
     return make_response('OK', 200)
@@ -196,6 +206,8 @@ def finishbackup(id):
         backup_log = SystemBackupLog()
         backup_log.system_backup_id = current_backup.id
         backup_log.log_text = "Backup Finished"
+        backup_log.created_at = datetime.datetime.utcnow()
+        backup_log.return_code = 0
         backup_log.save()
     return make_response(
         jsonify(
@@ -207,17 +219,19 @@ def finishbackup(id):
             }
         ), 200)
 
-@blueprint.route("/createbackup/<id>/", methods=["GET", "POST"])
+@blueprint.route("/createbackup/<id>/", methods=["POST"])
 def createbackup(id):
     current_backup = SystemBackup.query.filter_by(system_id=id).order_by('-id').first()
     if current_backup:
         current_backup.is_current = False
         current_backup.save()
-    new_backup = SystemBackup(system_id=id, is_current=True).save()
+    new_backup = SystemBackup(system_id=id, is_current=True, created_at=datetime.datetime.utcnow()).save()
     backup_log = SystemBackupLog()
     backup_log.system_backup_id = new_backup.id
     backup_log.log_text = "Backup Started"
     backup_log.system_id = id
+    backup_log.return_code = 0
+    backup_log.created_at = datetime.datetime.utcnow()
     backup_log.save()
     return make_response(
         jsonify(
@@ -254,7 +268,6 @@ def getsystemid(hostname):
     s_dict['id'] = system.id
     s_dict['hostname'] = system.hostname
     s_dict['created_at'] = system.created_at
-    ret.append(s_dict)
     return jsonify({
         'total_count': 1,
         'limit': 1,

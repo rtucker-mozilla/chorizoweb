@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime as dt
 
+
 from moz_au_web.extensions import bcrypt
 from moz_au_web.database import (
     Column,
@@ -16,6 +17,7 @@ class System(SurrogatePK, Model):
 
     __tablename__ = 'systems'
     hostname = Column(db.String(80), unique=True, nullable=False)
+    created_at = Column(db.DateTime, default=dt.datetime.utcnow())
     def __repr__(self):
         return '<System({hostname!r})>'.format(hostname=self.hostname)
 
@@ -23,6 +25,7 @@ class SystemBackup(SurrogatePK, Model):
     __tablename__ = 'system_backups'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
     system = relationship("System", foreign_keys=[system_id], backref="backups")
+    created_at = Column(db.DateTime, default=dt.datetime.utcnow())
     """
         is_current
         0 = Completed
@@ -45,4 +48,5 @@ class SystemBackupLog(SurrogatePK, Model):
     stdout = Column(db.Text, nullable=True)
     stderr = Column(db.Text, nullable=True)
     log_text = Column(db.Text, nullable=True)
+    created_at = Column(db.DateTime, default=dt.datetime.utcnow())
 
