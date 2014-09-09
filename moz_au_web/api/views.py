@@ -201,7 +201,7 @@ def logcapture():
 @blueprint.route("/finishupdate/<id>/", methods=["GET", "POST"])
 def finishupdate(id):
     current_update = SystemUpdate.query.filter_by(system_id=id).filter_by(is_current=1).first()
-    if current_update and current_update.is_current:
+    if current_update:
         current_update.is_current = False
         current_update.save()
         update_log = SystemUpdateLog()
@@ -210,13 +210,17 @@ def finishupdate(id):
         update_log.created_at = datetime.datetime.utcnow()
         update_log.return_code = 0
         update_log.save()
+        log_id = current_update.id
+    else:
+        log_id = -1
+
     return make_response(
         jsonify(
             {
                 'total_count': 1,
                 'limit': 1,
                 'offset': 0,
-                'id': current_update.id
+                'id': log_id
             }
         ), 200)
 
