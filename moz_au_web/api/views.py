@@ -177,8 +177,8 @@ def recentupdatedetail():
         'updates': s_ret}
     )
 
-@blueprint.route("/logcapture/<id>/", methods=["GET", "POST"])
-def logcapture(id):
+@blueprint.route("/logcapture/", methods=["GET", "POST"])
+def logcapture():
     log_obj = json.loads(request.data)
     s = SystemUpdateLog()
     s.return_code = log_obj['return_code']
@@ -193,13 +193,14 @@ def logcapture(id):
         s.log_text = log_obj['log_text']
     except KeyError:
         pass
-    s.system_update_id = id
+    system_update = SystemUpdate.query.filter_by(system_id=log_obj['system_id']).filter_by(is_current=1).first()
+    s.system_update_id = system_update.id
     s.save()
     return make_response('OK', 200)
 
 @blueprint.route("/finishupdate/<id>/", methods=["GET", "POST"])
 def finishupdate(id):
-    current_update = SystemUpdate.get_by_id(id)
+    current_update = SystemUpdate.query.filter_by(system_id=id).filter_by(is_current=1).first()
     if current_update and current_update.is_current:
         current_update.is_current = False
         current_update.save()
@@ -240,20 +241,6 @@ def createupdate(id):
                 'limit': 1,
                 'offset': 0,
                 'id': new_update.id
-            }
-        ), 200)
-@blueprint.route("/currentupdateid/<id>/", methods=["GET", "POST"])
-def currentupdateid(id):
-    current_update = SystemUpdate.query.filter_by(system_id=id).order_by('-id').first()
-    if current_update is None:
-        current_update = SystemUpdate(system_id=id).save()
-    return make_response(
-        jsonify(
-            {
-            'total_count': 1,
-            'limit': 1,
-            'offset': 0,
-            'id': current_update.id
             }
         ), 200)
 
