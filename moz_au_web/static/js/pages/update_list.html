@@ -1,4 +1,7 @@
-<a ng-init="init(5)" href="/">Home</a>
+<ul ng-init="init(5)" class="breadcrumb">
+    <li><a href="#">Home</a></li>
+    <li>Recent Updates</li>
+</ul>
 <div ng-if="updates.length == 0 && has_loaded = true">
     <h3>No Updates for System</h3>
 </div>

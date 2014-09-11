@@ -1,4 +1,7 @@
 <div ng-init="init()" ng-controller="ServerListCtrl">
+    <ul ng-init="init(5)" class="breadcrumb">
+        <li><a href="#">Home</a></li>
+    </ul>
     Search: <delay-search delayed-method="requery(search)"></delay-search>
     <table style="margin-top: 55px;" ng-if="systems.length > 0" class="table table-bordered table-striped">
         <thead>
