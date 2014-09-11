@@ -1,6 +1,6 @@
 <a ng-init="init(5)" href="/">Home</a>
 <a href="/#/updates/{{ hostname }}/">Updates</a>
-<div ng-if="updates.length == 0">
+<div ng-if="updates.length == 0 && has_loaded = true">
     <h3>No Updates for System</h3>
 </div>
 <div ng-if="updates.length > 0">

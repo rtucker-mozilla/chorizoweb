@@ -1,3 +1,8 @@
+angular.module('phonecatFilters', []).filter('checkmark', function() {
+  return function(input) {
+      return input;
+  };
+});
 var mozAUApp = angular.module('mozAUApp', ['ngRoute']);
 mozAUApp.config(function($routeProvider){
     $routeProvider
@@ -98,6 +103,7 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
 
 mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
+    $scope.has_loaded = false;
     $scope.updates = [];
     function build_update_list(limit){
         if (!limit){
@@ -106,6 +112,7 @@ mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
         $http.get('/api/updates/' + $scope.hostname + '?limit=' + limit).success(function(data){
             $scope.updates = data.updates;
         });
+        $scope.has_loaded = true;
     }
 
     $scope.init = function(limit){
@@ -115,12 +122,14 @@ mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
 mozAUApp.controller('BackupDetailCtrl', function ($scope, $http, $routeParams, $interval) {
     $scope.id = $routeParams['id'];
     $scope.updates = [];
+    $scope.has_loaded = false;
 
     function build_update_list(limit){
         $http.get('/api/updatedetail/' + $scope.id).success(function(data){
             $scope.updates = data.updates;
             $scope.hostname = data['hostname']
         });
+        $scope.has_loaded = true;
     }
 
     $scope.init = function(limit){

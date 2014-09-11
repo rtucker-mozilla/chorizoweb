@@ -30,6 +30,17 @@
     <script src="{{ url_for('static', filename='js/angular.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/angular-route.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
+    <style type="text/css">
+        /* 1st level */
+        .nav label {
+            color: blue;
+        }
+
+        /* 2nd level */
+        .tree > li > label {
+          padding:10px 15px;
+        }
+    </style>
 </head>
 <body class="{% block body_class %}{% endblock %}">
 {% block body %}
@@ -38,13 +49,16 @@
 {% endwith %}
 
 <header>{% block header %}{% endblock %}</header>
+
 <div class="{% block content_class %}container{% endblock content_class %}">
 
+
   <div role="main">
+
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="row">
-      <div class="col-md-12">
+      <div class="col-md-9">
+
         {% for category, message in messages %}
         <div class="alert alert-{{ category }}">
           <a class="close" title="Close" href="#" data-dismiss="alert">&times;</a>
@@ -55,8 +69,27 @@
     </div><!-- end row -->
         {% endif %}
     {% endwith %}
+    <div class="row">
+        <div class="col-md-3">
+            <div class="well">
+                <div>
+                    <ul class="nav">
+                        <li>
+                            <label label-default="" class="tree-toggle nav-header">Menu</label>
+                            <ul class="nav tree">
+                                <li><a href="#">Home</a></li>
+                                <li><a href="#">Broken Updates</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
 
-    {% block content %}{% endblock %}
   </div>
 
 </div><!-- end container -->
