@@ -3,7 +3,33 @@ angular.module('phonecatFilters', []).filter('checkmark', function() {
       return input;
   };
 });
-var mozAUApp = angular.module('mozAUApp', ['ngRoute']);
+function AccordionDemoCtrl($scope) {
+  $scope.oneAtATime = true;
+
+  $scope.groups = [
+    {
+      title: 'Dynamic Group Header - 1',
+      content: 'Dynamic Group Body - 1'
+    },
+    {
+      title: 'Dynamic Group Header - 2',
+      content: 'Dynamic Group Body - 2'
+    }
+  ];
+
+  $scope.items = ['Item 1', 'Item 2', 'Item 3'];
+
+  $scope.addItem = function() {
+    var newItemNo = $scope.items.length + 1;
+    $scope.items.push('Item ' + newItemNo);
+  };
+
+  $scope.status = {
+    isFirstOpen: true,
+    isFirstDisabled: false
+  };
+}
+var mozAUApp = angular.module('mozAUApp', ['ngRoute','ui.bootstrap']);
 mozAUApp.config(function($routeProvider){
     $routeProvider
     // route for the home page
@@ -145,4 +171,6 @@ mozAUApp.controller('BackupDetailCtrl', function ($scope, $http, $routeParams, $
     $scope.$on('$destroy', function() {
         $interval.cancel($scope.timer);
     });
+
 });
+
