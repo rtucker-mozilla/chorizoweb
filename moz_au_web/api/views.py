@@ -13,7 +13,6 @@ from moz_au_web.database import db
 from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog
 import json
 import datetime
-from pyes import *
 
 blueprint = Blueprint('api', __name__, static_folder="../static", url_prefix='/api')
 
