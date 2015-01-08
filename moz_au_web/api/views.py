@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''Public section, including homepage and signup.'''
 from flask import (Blueprint, request, render_template, flash, url_for,
-                    redirect, session, jsonify, make_response)
+                    redirect, session, jsonify, make_response, current_app)
 from flask.ext.login import login_user, login_required, logout_user
 
 from moz_au_web.extensions import login_manager
@@ -13,8 +13,13 @@ from moz_au_web.database import db
 from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog
 import json
 import datetime
+from pyes import *
 
 blueprint = Blueprint('api', __name__, static_folder="../static", url_prefix='/api')
+
+def get_es():
+    es = ES(current_app.config['ES_SERVER'])
+    return es
 
 @login_manager.user_loader
 def load_user(id):
@@ -106,6 +111,7 @@ def updates(hostname):
     limit=request.args.get('limit', 100)
     offset=request.args.get('offset', 0)
     s_system = System.query.filter_by(hostname=hostname).first()
+    total_count = SystemUpdate.query.filter(SystemUpdate.system==s_system).count()
     updates = SystemUpdate.query.filter(SystemUpdate.system==s_system).order_by('-id').limit(limit).all()
     s_ret = []
     for b in updates:
@@ -117,9 +123,8 @@ def updates(hostname):
         tmp['status'] = b.status_code
         s_ret.append(tmp)
 
-    total = len(s_system.updates)
     return jsonify({
-        'total_count': total,
+        'total_count': total_count,
         'limit': limit,
         'offset': offset,
         'updates': s_ret}
@@ -154,7 +159,6 @@ def updatedetail(id):
 
 @blueprint.route("/recentupdatedetail/", methods=["GET"])
 def recentupdatedetail():
-    ret = []
     limit = request.args.get('limit', 20)
     updates = SystemUpdateLog.query.order_by('-id').limit(limit).all()
     s_ret = []
@@ -224,7 +228,7 @@ def finishupdate(id):
             }
         ), 200)
 
-@blueprint.route("/createupdate/<id>/", methods=["POST"])
+@blueprint.route("/createupdate/<id>/", methods=["GET", "POST"])
 def createupdate(id):
     current_update = SystemUpdate.query.filter_by(system_id=id).order_by('-id').first()
     if current_update:

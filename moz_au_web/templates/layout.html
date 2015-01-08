@@ -52,7 +52,7 @@
 
 <header>{% block header %}{% endblock %}</header>
 
-<div class="{% block content_class %}container{% endblock content_class %}">
+<div style="width: 100%;" class="{% block content_class %}container{% endblock content_class %}">
 
 
   <div role="main">
@@ -72,7 +72,7 @@
         {% endif %}
     {% endwith %}
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="well">
                 <div>
                     <ul class="nav">
@@ -86,7 +86,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-9">
+        <div class="col-md-10">
             {% block content %}{% endblock %}
         </div>
     </div>

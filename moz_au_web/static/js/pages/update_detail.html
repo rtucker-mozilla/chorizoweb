@@ -25,10 +25,10 @@
         <td>{{ update.id }}</td>
         <td>{{ update.return_code }}</td>
         <td>{{ update.log_text }}</td>
-        {{ update.stdout.length }}
-        <td ng-if="update.stdout.length"><pre>{{ update.stdout|limitTo : 200}}</pre></td>
+        <td ng-if="update.stdout.length"><pre>{{ update.stdout|limitTo : 200000}}</pre></td>
         <td ng-if="!update.stdout">&nbsp;</td>
-        <td>{{ update.stderr }}</td>
+        <td ng-if="update.stderr.length"><pre>{{ update.stderr|limitTo : 200000}}</pre></td>
+        <td ng-if="!update.stderr">&nbsp;</td>
         <td>{{ update.created_at }}</td>
     </tr>
     </tbody>
