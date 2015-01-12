@@ -1,0 +1,110 @@
+
+<html  ng-app="mozAUApp">
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <title>{% block page_title %}
+  
+    Mozilla Auto Update Web Interface
+  
+    {% endblock %}
+  </title>
+  <meta name="description" content="{% block meta_description %}{% endblock %}">
+  <meta name="author" content="{% block meta_author %}{% endblock %}">
+
+  <!-- Mobile viewport optimized: h5bp.com/viewport -->
+  <meta name="viewport" content="width=device-width">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='libs/font-awesome4/css/font-awesome.min.css') }}">
+  {% assets "css_all" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}">
+  {% endassets %}
+
+  {% block css %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/angular.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/angular-route.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-bootstrap-0.11.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-bootstrap-tpls-0.11.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
+    <style type="text/css">
+        /* 1st level */
+        .nav label {
+            color: blue;
+        }
+
+        /* 2nd level */
+        .tree > li > label {
+          padding:10px 15px;
+        }
+    </style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block body %}
+{% with form=form  %}
+{% include "nav.html" %}
+{% endwith %}
+
+<header>{% block header %}{% endblock %}</header>
+
+<div style="width: 100%;" class="{% block content_class %}container{% endblock content_class %}">
+
+
+  <div role="main">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="col-md-9">
+
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          <a class="close" title="Close" href="#" data-dismiss="alert">&times;</a>
+         {{message}}
+        </div><!-- end .alert -->
+        {% endfor %}
+      </div><!-- end col-md -->
+    </div><!-- end row -->
+        {% endif %}
+    {% endwith %}
+    <div class="row">
+        <div class="col-md-2">
+            <div class="well">
+                <div>
+                    <ul class="nav">
+                        <li>
+                            <label label-default="" class="tree-toggle nav-header">Menu</label>
+                            <ul class="nav tree">
+                                <li><a href="#">Broken Updates</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+</div>
+
+  </div>
+
+</div><!-- end container -->
+
+{% include "footer.html" %}
+
+<!-- JavaScript at the bottom for fast page loading -->
+{% assets "js_all" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
+{% block js %}{% endblock %}
+<!-- end scripts -->
+{% endblock %}
+</body>
+</html>

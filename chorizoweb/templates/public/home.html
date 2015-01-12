@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div ng-init="init()" id="main">
+    <div ng-view></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+import sys, os
+PROJECT_DIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(PROJECT_DIR)
+activate_this = os.path.join(PROJECT_DIR, 'venv', 'bin', 'activate_this.py')
+execfile(activate_this, dict(__file__=activate_this))
+
+from chorizoweb.app import create_app
+from chorizoweb.settings import ProdConfig
+
+app = create_app(ProdConfig)
+application = app
+
+if __name__ == "__main__":
+    app.debug = False
+    app.run()
