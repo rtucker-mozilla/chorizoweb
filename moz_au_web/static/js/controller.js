@@ -215,7 +215,10 @@ mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
 
     $scope.models = {
         selected: null,
-        lists: {"Available_Scripts": [], "Installed_Scripts": []}
+        lists: {
+            "Installed_Scripts": [],
+            "Available_Scripts": []
+        }
     };
 
     // Generate initial model

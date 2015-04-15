@@ -2,22 +2,6 @@
     <li><a href="#">Home</a></li>
     <li>Recent Updates</li>
 </ul>
-<ul dnd-list="list">
-    <!-- The dnd-draggable directive makes an element draggable and will
-         transfer the object that was assigned to it. If an element was
-         dragged away, you have to remove it from the original list
-         yourself using the dnd-moved attribute -->
-    <li ng-repeat="item in list"
-        dnd-draggable="item"
-        dnd-moved="list.splice($index, 1)"
-        dnd-effect-allowed="move"
-        dnd-selected="models.selected = item"
-        ng-class="{'selected': models.selected === item}"
-        >
-        {{item.label}}
-    </li>
-</ul>
-
 <h1>Configure Update Scripts</h1>
 
 <div class="alert alert-success">
@@ -29,14 +13,62 @@
 
     <div class="col-md-8">
         <div class="row">
-            <div ng-repeat="(listName, list) in models.lists" class="col-md-6">
+            <div class="col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Installed Scripts</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul dnd-list="models.lists.Installed_Scripts">
+                            <!-- The dnd-draggable directive makes an element draggable and will
+                                 transfer the object that was assigned to it. If an element was
+                                 dragged away, you have to remove it from the original list
+                                 yourself using the dnd-moved attribute -->
+                            <li ng-repeat="item in models.lists.Installed_Scripts"
+                                dnd-draggable="item"
+                                dnd-moved="models.lists.Installed_Scripts.splice($index, 1)"
+                                dnd-effect-allowed="move"
+                                dnd-selected="models.selected = item"
+                                ng-class="{'selected': models.selected === item}"
+                                >
+                                {{item.label}}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Available Scripts</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul dnd-list="models.lists.Available_Scripts">
+                            <!-- The dnd-draggable directive makes an element draggable and will
+                                 transfer the object that was assigned to it. If an element was
+                                 dragged away, you have to remove it from the original list
+                                 yourself using the dnd-moved attribute -->
+                            <li ng-repeat="item in models.lists.Available_Scripts"
+                                dnd-draggable="item"
+                                dnd-moved="models.lists.Available_Scripts.splice($index, 1)"
+                                dnd-effect-allowed="move"
+                                dnd-selected="models.selected = item"
+                                ng-class="{'selected': models.selected === item}"
+                                >
+                                {{item.label}}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!--<div ng-repeat="(listName, list) in models.lists" class="col-md-6">
                 <div class="panel panel-info">
                     <div class="panel-heading">
                         <h3 class="panel-title">{{listName}}</h3>
                     </div>
                     <div class="panel-body" ng-include="'/static/js/pages/simple.html'"></div>
                 </div>
-            </div>
+            </div>-->
         </div>
 
         <div view-source="simple"></div>
