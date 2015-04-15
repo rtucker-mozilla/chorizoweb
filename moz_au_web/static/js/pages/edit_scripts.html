@@ -25,6 +25,7 @@
                                  dragged away, you have to remove it from the original list
                                  yourself using the dnd-moved attribute -->
                             <li ng-repeat="item in models.lists.Installed_Scripts"
+                                style="cursor: pointer;"
                                 dnd-draggable="item"
                                 dnd-moved="models.lists.Installed_Scripts.splice($index, 1)"
                                 dnd-effect-allowed="move"
@@ -48,7 +49,7 @@
                                  transfer the object that was assigned to it. If an element was
                                  dragged away, you have to remove it from the original list
                                  yourself using the dnd-moved attribute -->
-                            <li ng-repeat="item in models.lists.Available_Scripts"
+                            <li style="cursor: pointer;" ng-repeat="item in models.lists.Available_Scripts"
                                 dnd-draggable="item"
                                 dnd-moved="models.lists.Available_Scripts.splice($index, 1)"
                                 dnd-effect-allowed="move"
