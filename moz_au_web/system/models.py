@@ -18,6 +18,8 @@ class System(SurrogatePK, Model):
     __tablename__ = 'systems'
     hostname = Column(db.String(80), unique=True, nullable=False)
     created_at = Column(db.DateTime, default=dt.datetime.utcnow())
+    cronfile = Column(db.String(80), unique=False, nullable=False)
+    
     def __repr__(self):
         return '<System({hostname!r})>'.format(hostname=self.hostname)
 
