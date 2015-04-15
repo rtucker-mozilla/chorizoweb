@@ -166,7 +166,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
 });
 mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.system = {};
     $scope.cronfile = "";
     $scope.show_success = false;
@@ -179,8 +179,8 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
     }
     $scope.updateCronfile = function(){
         $scope.alert_id++;
-        data = {}
-        data['cronfile'] = $scope.cronfile
+        data = {};
+        data['cronfile'] = $scope.cronfile;
         $http({
             withCredentials: false,
             method: 'post',
@@ -188,7 +188,6 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
             url: '/api/updatecronfile/' + $scope.system.id + '/',
             data: JSON.stringify(data)
         }).success(function(data){
-            log("here");
             var alert_text = '<div class="alert alert-success"><button type="button" class="close" id="' + $scope.alert_id +' " data-dismiss="alert" aria-hidden="true">&times;</button>Cronfile Successfully Updated</div>';
             $scope.success_message = $sce.trustAsHtml(alert_text);
         });
