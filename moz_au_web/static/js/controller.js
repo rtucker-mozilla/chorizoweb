@@ -49,6 +49,11 @@ mozAUApp.config(function($routeProvider){
         controller  : 'BackupDetailCtrl'
     })
 
+    .when('/updatecron/:hostname', {
+        templateUrl : '/static/js/pages/update_cron.html',
+        controller  : 'UpdateCronCtrl'
+    })
+
     // route for the contact page
     .when('/contact', {
         templateUrl : 'pages/contact.html',
@@ -83,6 +88,7 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
     $scope.debug = false;
     $scope.systems = [];
     $scope.recent = [];
+    $scope.system = '';
 
     function log(message){
         if($scope.debug && console){
@@ -95,7 +101,11 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
         log("Recent Backups Called");
         $http.get('/api/recentupdatedetail/?limit=' + limit).success(function(data){
             $scope.recent = data.updates;
+            log($scope.recent);
         });
+        /*$http.get('/api/system/asdf').success(function(data){
+            $scope.recent = data.system;
+        });*/
     }
 
 
@@ -120,23 +130,97 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
     }
 
     $scope.$on('$destroy', function() {
-      log('destroy called');
       $interval.cancel($scope.timer);
     });
 
-
 });
 
-mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
+mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
     $scope.has_loaded = false;
     $scope.updates = [];
+    $scope.debug = true;
+    $scope.system = {};
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
     function build_update_list(limit){
         if (!limit){
             limit = 10;
         }
         $http.get('/api/updates/' + $scope.hostname + '?limit=' + limit).success(function(data){
             $scope.updates = data.updates;
+        });
+        $http.get('/api/system/' + $scope.hostname).success(function(data){
+            $scope.system = data.system;
+        });
+        $scope.has_loaded = true;
+    }
+
+    $scope.init = function(limit){
+        log($scope.hostname);
+        build_update_list(limit);
+    }
+});
+mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParams) {
+    $scope.hostname = $routeParams['hostname'];
+    $scope.debug = true;
+    $scope.system = {};
+    $scope.cronfile = "";
+    $scope.show_success = false;
+    $scope.success_message = "";
+    $scope.alert_id = 1;
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+    $scope.updateCronfile = function(){
+        $scope.alert_id++;
+        data = {}
+        data['cronfile'] = $scope.cronfile
+        $http({
+            withCredentials: false,
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            url: '/api/updatecronfile/' + $scope.system.id + '/',
+            data: JSON.stringify(data)
+        }).success(function(data){
+            log("here");
+            var alert_text = '<div class="alert alert-success"><button type="button" class="close" id="' + $scope.alert_id +' " data-dismiss="alert" aria-hidden="true">&times;</button>Cronfile Successfully Updated</div>';
+            $scope.success_message = $sce.trustAsHtml(alert_text);
+        });
+    }
+
+    $scope.init = function(limit){
+        $http.get('/api/system/' + $scope.hostname).success(function(data){
+            $scope.system = data.system;
+            $scope.cronfile = $scope.system.cronfile;
+        });
+    }
+});
+mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
+    $scope.hostname = $routeParams['hostname'];
+    $scope.has_loaded = false;
+    $scope.updates = [];
+    $scope.debug = false;
+    $scope.system = {};
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+    function build_update_list(limit){
+        if (!limit){
+            limit = 10;
+        }
+        $http.get('/api/updates/' + $scope.hostname + '?limit=' + limit).success(function(data){
+            $scope.updates = data.updates;
+        });
+        $http.get('/api/system/' + $scope.hostname).success(function(data){
+            $scope.system = data.system;
         });
         $scope.has_loaded = true;
     }

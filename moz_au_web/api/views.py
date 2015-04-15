@@ -43,6 +43,7 @@ def system():
     for s in systems:
         s_dict = {}
         s_dict['hostname'] = s.hostname
+        s_dict['cronfile'] = s.cronfile
         s_dict['created_at'] = s.created_at
         ret.append(s_dict)
     return jsonify({
@@ -71,8 +72,16 @@ def read_system(id):
     s_dict = {}
     s_dict['id'] = system.id
     s_dict['hostname'] = system.hostname
+    s_dict['cronfile'] = system.cronfile
     s_dict['created_at'] = system.created_at
     return make_response(jsonify({'system': s_dict}), 200)
+
+@blueprint.route("/updatecronfile/<id>/", methods=["POST"])
+def updatecronfile(id):
+    s = System.get_by_id(id)
+    s.cronfile = request.get_json()['cronfile']
+    s.save()
+    return make_response(jsonify({'status': 'OK'}), 200)
 
 @blueprint.route("/system/<hostname>/", methods=["POST"])
 def create_system(hostname):
@@ -83,6 +92,7 @@ def create_system(hostname):
     s_dict = {}
     s_dict['id'] = s.id
     s_dict['hostname'] = s.hostname
+    s_dict['cronfile'] = s.cronfile
     s_dict['created_at'] = s.created_at
     return make_response(jsonify({'system': ret}), 200)
 
@@ -94,6 +104,7 @@ def update_system():
     s_dict = {}
     s_dict['id'] = s.id
     s_dict['hostname'] = s.hostname
+    s_dict['cronfile'] = s.cronfile
     s_dict['created_at'] = s.created_at
     return make_response(jsonify({'system': ret}), 200)
 
