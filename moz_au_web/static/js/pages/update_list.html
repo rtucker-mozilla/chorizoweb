@@ -4,7 +4,12 @@
 </ul>
 <div>
     <dt>Hostname: <dd>{{ system.hostname }}</dd></dt>
-    <dt>Cronfile: <dd><a href="#updatecron/{{ system.hostname }}/">{{ system.cronfile }}</a></dd></dt>
+    <dt>Cronfile:
+        <dd>
+            <a ng-if='system.cronfile != ""' href="#updatecron/{{ system.hostname }}/">{{ system.cronfile }}</a>
+            <a ng-if='system.cronfile == ""' href="#updatecron/{{ system.hostname }}/">Create Cronfile</a>
+        </dd>
+    </dt>
 </div>
 <div ng-if="updates.length == 0 && has_loaded == true">
     <h3>No Updates for System</h3>
