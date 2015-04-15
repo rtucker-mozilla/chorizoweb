@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys, os
 PROJECT_DIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(PROJECT_DIR)
