@@ -29,7 +29,7 @@ function AccordionDemoCtrl($scope) {
     isFirstDisabled: false
   };
 }
-var mozAUApp = angular.module('mozAUApp', ['ngRoute','ui.bootstrap']);
+var mozAUApp = angular.module('mozAUApp', ['ngRoute','ui.bootstrap','dndLists']);
 mozAUApp.config(function($routeProvider){
     $routeProvider
     // route for the home page
@@ -42,6 +42,11 @@ mozAUApp.config(function($routeProvider){
     .when('/updates/:hostname', {
         templateUrl : '/static/js/pages/update_list.html',
         controller  : 'BackupListCtrl'
+    })
+
+    .when('/scripts/:hostname', {
+        templateUrl : '/static/js/pages/edit_scripts.html',
+        controller  : 'ScriptsCtrl'
     })
 
     .when('/updatedetail/:id', {
@@ -199,6 +204,35 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
             $scope.cronfile = $scope.system.cronfile;
         });
     }
+});
+mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
+    $scope.debug = true;
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+
+    $scope.models = {
+        selected: null,
+        lists: {"Installed_Scripts": [], "Available_Scripts": []}
+    };
+
+    // Generate initial model
+    for (var i = 1; i <= 3; ++i) {
+        $scope.models.lists.Installed_Scripts.push({label: "Script A" + i});
+        $scope.models.lists.Available_Scripts.push({label: "Script B" + i});
+    }
+
+    // Model to JSON for demo purpose
+    $scope.$watch('models', function(model) {
+        $scope.modelAsJson = angular.toJson(model, true);
+    }, true);
+
+    $scope.init = function(limit){
+        log('here');
+    }
+
 });
 mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
