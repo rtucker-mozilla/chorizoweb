@@ -3,6 +3,7 @@
 from flask import (Blueprint, request, render_template, flash, url_for,
                     redirect, session, jsonify, make_response, current_app)
 from flask.ext.login import login_user, login_required, logout_user
+from sqlalchemy.exc import IntegrityError
 
 from moz_au_web.extensions import login_manager
 from moz_au_web.user.models import User
@@ -10,7 +11,7 @@ from moz_au_web.public.forms import LoginForm
 from moz_au_web.user.forms import RegisterForm
 from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
-from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog
+from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, ScriptAvailable, ScriptsInstalled
 import json
 import datetime
 
@@ -52,6 +53,28 @@ def system():
         'offset': offset,
         'systems': ret}
     )
+
+@blueprint.route("/cronfile/<id>/", methods=["GET"])
+def cronfile(id):
+    try:
+        id = int(id)
+        is_id = True
+    except ValueError:
+        is_id = False
+
+    if is_id:
+        system = System.get_by_id(id)
+    else:
+        system = System.query.filter_by(hostname=id).first()
+
+    if system == None:
+        return make_response(jsonify({'error': 'Cannot find system'}), 404)
+
+    s_dict = {}
+    s_dict['id'] = system.id
+    s_dict['hostname'] = system.hostname
+    s_dict['cronfile'] = system.cronfile
+    return make_response(jsonify({'system': s_dict}), 200)
 
 @blueprint.route("/system/<id>/", methods=["GET"])
 def read_system(id):
@@ -238,6 +261,44 @@ def finishupdate(id):
             }
         ), 200)
 
+@blueprint.route("/scriptdetail/<id>/", methods=["GET"])
+def scriptdetail(id):
+    s = ScriptAvailable.get_by_id(id)
+    s_obj = {}
+    s_obj['id'] = s.id
+    s_obj['file_name'] = s.file_name
+    s_obj['description'] = s.description
+    return jsonify({
+        'total_count': 1,
+        'limit': 0,
+        'offset': 0,
+        'script': s_obj}
+    )
+
+@blueprint.route("/scriptedit/<id>/", methods=["GET", "POST"])
+def scriptedit(id):
+    s = ScriptAvailable.get_by_id(id)
+    json_data = request.get_json()
+    s.file_name = json_data['file_name']
+    s.description = json_data['description']
+    try:
+        s.save()
+    except IntegrityError:
+        return make_response("Script with this name already exists.", 500)
+    return make_response('OK', 200)
+
+@blueprint.route("/scriptcreate/", methods=["GET", "POST"])
+def scriptcreate():
+    s = ScriptAvailable()
+    json_data = request.get_json()
+    s.file_name = json_data['file_name']
+    s.description = json_data['description']
+    try:
+        s.save()
+    except IntegrityError:
+        return make_response("Script with this name already exists.", 500)
+    return make_response('OK', 200)
+
 @blueprint.route("/createupdate/<id>/", methods=["GET", "POST"])
 def createupdate(id):
     current_update = SystemUpdate.query.filter_by(system_id=id).order_by('-id').first()
@@ -262,16 +323,83 @@ def createupdate(id):
             }
         ), 200)
 
+@blueprint.route("/updatehostscripts/<hostname>/", methods=["GET", "POST"])
+def updatehostscripts(hostname):
+    ret = []
+    s_dict = []
+    if request.method == "POST":
+        host = System.query.filter_by(hostname=hostname).first()
+        # @TODO: Figure out a better way to delete than this
+        current_scripts = ScriptsInstalled.query.filter_by(system=host).all()
+        for c in current_scripts:
+            c.delete()
+        data = request.get_json()
+        order = 0
+        for i in data:
+            available_script = ScriptAvailable.get_by_id(i['id'])
+            if not available_script is None:
+                tmp = ScriptsInstalled()
+                tmp.script = available_script
+                tmp.script_order = order
+                tmp.system = host
+                tmp.save()
+                order += 1
+    return jsonify({
+        'total_count': len(s_dict),
+        'limit': 0,
+        'offset': 0,
+        'scripts': s_dict}
+    )
+
+@blueprint.route("/hostscripts/<hostname>/", methods=["GET"])
+def hostscripts(hostname):
+    ret = []
+    s_dict = []
+    host = System.query.filter_by(hostname=hostname).first()
+    all_scripts = ScriptsInstalled.query.filter_by(system_id = host.id).order_by('script_order').all()
+    for s in all_scripts:
+        tmp = {}
+        tmp['id'] = s.script.id
+        tmp['file_name'] = s.script.file_name
+        tmp['order'] = s.script_order
+        s_dict.append(tmp)
+    return jsonify({
+        'total_count': len(s_dict),
+        'limit': 0,
+        'offset': 0,
+        'scripts': s_dict}
+    )
+
+@blueprint.route("/scripts/", methods=["GET"])
+def scripts():
+    ret = []
+    s_dict = []
+    all_scripts = ScriptAvailable.query.all()
+    for s in all_scripts:
+        tmp = {}
+        tmp['id'] = s.id
+        tmp['file_name'] = s.file_name
+        tmp['description'] = s.description
+        s_dict.append(tmp)
+    return jsonify({
+        'total_count': len(s_dict),
+        'limit': 0,
+        'offset': 0,
+        'scripts': s_dict}
+    )
 @blueprint.route("/getsystemid/<hostname>/", methods=["GET"])
 def getsystemid(hostname):
     ret = []
     system = System.query.filter_by(hostname=hostname).first()
     if not system:
-        system = System(hostname=hostname).save()
+        system = System(hostname=hostname)
+        system.cronfile = "0 0 0 * *"
+        system.save()
 
     s_dict = {}
     s_dict['id'] = system.id
     s_dict['hostname'] = system.hostname
+    s_dict['cronfile'] = system.cronfile
     s_dict['created_at'] = system.created_at
     return jsonify({
         'total_count': 1,

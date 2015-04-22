@@ -52,3 +52,28 @@ class SystemUpdateLog(SurrogatePK, Model):
     log_text = Column(db.Text, nullable=True)
     created_at = Column(db.DateTime, default=dt.datetime.utcnow())
 
+class ScriptAvailable(SurrogatePK, Model):
+    __tablename__ = 'scripts_available'
+    file_name = Column(db.String(80), unique=True, nullable=False)
+    description = Column(db.Text, unique=False, nullable=False)
+    created_at = Column(db.DateTime, default=dt.datetime.utcnow)
+    """
+        is_available
+        0 = Disabled
+        1 = Enabled
+    """
+    is_available = Column(db.Boolean, nullable=False, default=1)
+
+class ScriptsInstalled(SurrogatePK, Model):
+    __tablename__ = 'scripts_installed'
+    system_id = Column(db.Integer, db.ForeignKey('systems.id'))
+    system = relationship("System", foreign_keys=[system_id], backref="system")
+    script_id = Column(db.Integer, db.ForeignKey('scripts_available.id'))
+    script = relationship("ScriptAvailable", foreign_keys=[script_id], backref="script")
+    script_order = Column(db.Integer, default=0)
+    """
+        is_current
+        0 = Disabled
+        1 = Active
+    """
+    is_active = Column(db.Boolean, nullable=False, default=1)

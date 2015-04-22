@@ -1,0 +1,25 @@
+<div class="col-md-6">
+    <div class="row">
+        <h1>
+            <span>Script List</span>
+            <button class='btn btn-primary pull-right' onclick="location.href='/#/scripts/create/';">Create Script</button>
+        </h1>
+        <hr/>
+    </div>
+    <div class="row">
+        <div ng-init="init()" ng-controller="ScriptListCtrl">
+            <table style="margin-top: 55px;" ng-if="scripts.length > 0" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>Script</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="script in scripts | filter:query">
+                    <td><a href="#scripts/edit/{{ script.id }}/">{{ script.file_name }}</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

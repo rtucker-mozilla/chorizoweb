@@ -38,10 +38,20 @@ mozAUApp.config(function($routeProvider){
         controller  : 'ServerListCtrl'
     })
 
+    .when('/scripts/create/', {
+        templateUrl : '/static/js/pages/script_create.html',
+        controller  : 'ScriptCreateCtrl'
+    })
+
+    .when('/scripts/edit/:id', {
+        templateUrl : '/static/js/pages/script_edit.html',
+        controller  : 'ScriptEditCtrl'
+    })
+
     // route for the about page
     .when('/updates/:hostname', {
         templateUrl : '/static/js/pages/update_list.html',
-        controller  : 'BackupListCtrl'
+        controller  : 'ScriptListCtrl'
     })
 
     .when('/scripts/:hostname', {
@@ -89,6 +99,130 @@ mozAUApp.directive('delaySearch', function ($timeout) {
     });
 
 
+mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $interval, $routeParams) {
+    $scope.debug = true;
+    $scope.id = $routeParams['id'];
+    $scope.file_name = ''
+    $scope.description = ''
+
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+    var changeLocation = function(url, forceReload) {
+      $scope = $scope || angular.element(document).scope();
+      if(forceReload || $scope.$$phase) {
+        window.location = url;
+      }
+      else {
+        $location.path(url);
+        $scope.$apply();
+      }
+    };
+
+    $scope.update = function() {
+        $scope.alert_id++;
+        data = {};
+        data['file_name'] = $scope.file_name;
+        data['description'] = $scope.description;
+        $http({
+            withCredentials: false,
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            url: '/api/scriptedit/' + $scope.id + '/',
+            data: JSON.stringify(data)
+        }).success(function(data){
+            changeLocation('/#/scripts/')
+        }).error(function(data){
+            log(data);
+        });
+        log("$scope.filename: " + $scope.file_name);
+        log("$scope.description: " + $scope.description);
+    }
+
+
+    $scope.init = function(){
+        $http.get('/api/scriptdetail/' + $scope.id + '/').success(function(data){
+            $scope.file_name = data.script.file_name;
+            $scope.description = data.script.description;
+            log($scope.scripts);
+        });
+
+    }
+
+});
+mozAUApp.controller('ScriptCreateCtrl', function ($scope, $location, $http, $interval) {
+    $scope.debug = true;
+    $scope.file_name = ''
+    $scope.description = ''
+
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+    var changeLocation = function(url, forceReload) {
+      $scope = $scope || angular.element(document).scope();
+      if(forceReload || $scope.$$phase) {
+        window.location = url;
+      }
+      else {
+        $location.path(url);
+        $scope.$apply();
+      }
+    };
+
+    $scope.create = function() {
+        $scope.alert_id++;
+        data = {};
+        data['file_name'] = $scope.file_name;
+        data['description'] = $scope.description;
+        $http({
+            withCredentials: false,
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            url: '/api/scriptcreate/',
+            data: JSON.stringify(data)
+        }).success(function(data){
+            changeLocation('/#/scripts/')
+        }).error(function(data){
+            log(data);
+        });
+        log("$scope.filename: " + $scope.file_name);
+        log("$scope.description: " + $scope.description);
+    }
+
+
+    $scope.init = function(){
+        log('init called');
+    }
+
+});
+
+mozAUApp.controller('ScriptListCtrl', function ($scope, $http, $interval) {
+    $scope.debug = false;
+    $scope.scripts = [];
+
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+
+
+    function scripts(){
+        $http.get('/api/scripts/').success(function(data){
+            $scope.scripts = data.scripts;
+            log($scope.scripts);
+        });
+    }
+
+    $scope.init = function(){
+        scripts();
+    }
+
+});
 mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
     $scope.debug = false;
     $scope.systems = [];
@@ -103,14 +237,10 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
 
 
     function recent_updates(limit){
-        log("Recent Backups Called");
         $http.get('/api/recentupdatedetail/?limit=' + limit).success(function(data){
             $scope.recent = data.updates;
             log($scope.recent);
         });
-        /*$http.get('/api/system/asdf').success(function(data){
-            $scope.recent = data.system;
-        });*/
     }
 
 
@@ -207,6 +337,9 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
 });
 mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
     $scope.debug = true;
+    $scope.hostname = $routeParams['hostname'];
+    $scope.installed_script_file_names = [];
+    $scope.current_installed_scripts = {};
     function log(message){
         if($scope.debug && console){
             console.log(message);
@@ -222,18 +355,47 @@ mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
     };
 
     // Generate initial model
-    for (var i = 1; i <= 3; ++i) {
-        $scope.models.lists.Installed_Scripts.push({label: "Script A" + i});
-        $scope.models.lists.Available_Scripts.push({label: "Script B" + i});
-    }
+    $http.get('/api/hostscripts/' + $scope.hostname + '/').success(function(data){
+        for (f=0;f<data.scripts.length;f++){
+            $scope.models.lists.Installed_Scripts.push({
+                label: data.scripts[f].file_name,
+                id: data.scripts[f].id
+            });
+            $scope.installed_script_file_names.push(data.scripts[f].file_name)
+        }
+        $scope.current_installed_scripts = $scope.models.lists.Installed_Scripts;
+    });
+    $http.get('/api/scripts/').success(function(data){
+        for (f=0;f<data.scripts.length;f++){
+            if ($scope.installed_script_file_names.indexOf(data.scripts[f].file_name) == -1){
+                $scope.models.lists.Available_Scripts.push({
+                    label: data.scripts[f].file_name,
+                    id: data.scripts[f].id
+                });
+            }
+        }
+    });
 
     // Model to JSON for demo purpose
-    $scope.$watch('models', function(model) {
-        $scope.modelAsJson = angular.toJson(model, true);
-    }, true);
+    $scope.save = function(){
+        $scope.modelAsJson = angular.toJson($scope.models.lists.Installed_Scripts, true);
+            $http({
+                withCredentials: false,
+                method: 'post',
+                headers: { 'Content-Type': 'application/json' },
+                url: '/api/updatehostscripts/' + $scope.hostname + '/',
+                data: $scope.modelAsJson
+            }).success(function(data){
+                log("Successfully Saved");
+            }).error(function(data){
+                log(data);
+        });
+
+    }
+
 
     $scope.init = function(limit){
-        log('here');
+        log('here in model');
     }
 
 });

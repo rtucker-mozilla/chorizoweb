@@ -4,9 +4,14 @@
 </ul>
 <h1>Configure Update Scripts</h1>
 
-<div class="alert alert-success">
+<div class="col-md-8 alert alert-success">
     <strong>Instructions:</strong>
     Drag the scripts from the available scripts box to the installed scripts box. You can control the order as well. The top script runs first.
+</div>
+<div class="col-md-8">
+    <div class="row">
+        <button class="btn btn-primary" ng-click="save()">Save</button><br /><br />
+    </div>
 </div>
 
 <div class="simpleDemo row">
@@ -75,16 +80,4 @@
         <div view-source="simple"></div>
 
     </div>
-
-    <div class="col-md-4">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Generated Model</h3>
-            </div>
-            <div class="panel-body">
-                <pre class="code">{{modelAsJson}}</pre>
-            </div>
-        </div>
-    </div>
-
 </div>
