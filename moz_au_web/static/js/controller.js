@@ -49,9 +49,9 @@ mozAUApp.config(function($routeProvider){
     })
 
     // route for the about page
-    .when('/updates/:hostname', {
+    .when('/detail/:hostname', {
         templateUrl : '/static/js/pages/update_list.html',
-        controller  : 'ScriptListCtrl'
+        controller  : 'UpdateListCtrl'
     })
 
     .when('/scripts/:hostname', {
@@ -201,7 +201,7 @@ mozAUApp.controller('ScriptCreateCtrl', function ($scope, $location, $http, $int
 });
 
 mozAUApp.controller('ScriptListCtrl', function ($scope, $http, $interval) {
-    $scope.debug = false;
+    $scope.debug = true;
     $scope.scripts = [];
 
     function log(message){
@@ -219,12 +219,13 @@ mozAUApp.controller('ScriptListCtrl', function ($scope, $http, $interval) {
     }
 
     $scope.init = function(){
+        log('Calling Init')
         scripts();
     }
 
 });
 mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
-    $scope.debug = false;
+    $scope.debug = true;
     $scope.systems = [];
     $scope.recent = [];
     $scope.system = '';
@@ -237,11 +238,12 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
 
 
     function recent_updates(limit){
-        $http.get('/api/recentupdatedetail/?limit=' + limit).success(function(data){
+        $http.get('/api/recentupdateonly/?limit=' + limit).success(function(data){
             $scope.recent = data.updates;
             log($scope.recent);
         });
     }
+
 
 
     $scope.requery = function(search){
@@ -255,6 +257,7 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
     };
 
     $scope.init = function(limit){
+        log("init called");
         if(!$scope.timer){
             $scope.timer = $interval(function(){
                 log("Timer Fired");
@@ -281,6 +284,13 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
             console.log(message);
         }
     }
+    $scope.ping = function(){
+        log("Ping Called");
+        $http.get('/api/ping/' + $scope.hostname + '/').success(function(data){
+            log(data);
+        });
+    }
+
     function build_update_list(limit){
         if (!limit){
             limit = 10;
@@ -288,7 +298,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
         $http.get('/api/updates/' + $scope.hostname + '?limit=' + limit).success(function(data){
             $scope.updates = data.updates;
         });
-        $http.get('/api/system/' + $scope.hostname).success(function(data){
+        $http.get('/api/system/' + $scope.hostname + '/').success(function(data){
             $scope.system = data.system;
         });
         $scope.has_loaded = true;
@@ -329,7 +339,7 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
     }
 
     $scope.init = function(limit){
-        $http.get('/api/system/' + $scope.hostname).success(function(data){
+        $http.get('/api/system/' + $scope.hostname + '/').success(function(data){
             $scope.system = data.system;
             $scope.cronfile = $scope.system.cronfile;
         });
@@ -417,7 +427,7 @@ mozAUApp.controller('BackupListCtrl', function ($scope, $http, $routeParams) {
         $http.get('/api/updates/' + $scope.hostname + '?limit=' + limit).success(function(data){
             $scope.updates = data.updates;
         });
-        $http.get('/api/system/' + $scope.hostname).success(function(data){
+        $http.get('/api/system/' + $scope.hostname + '/').success(function(data){
             $scope.system = data.system;
         });
         $scope.has_loaded = true;

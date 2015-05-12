@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import datetime as dt
+import time
+import hashlib
+import json
 
 
 from moz_au_web.extensions import bcrypt
@@ -22,6 +25,69 @@ class System(SurrogatePK, Model):
     
     def __repr__(self):
         return '<System({hostname!r})>'.format(hostname=self.hostname)
+
+    @staticmethod
+    def get_by_hostname(hostname):
+        # Find a system by it's hostname
+        # If a system doesn't exist by it's hostname than create it
+        system = System.query.filter_by(hostname=hostname).first()
+        if system is None:
+            system = System()
+            system.hostname = hostname
+            system.created_at = datetime.datetime.utcnow()
+            system.save()
+        return system
+
+    def get_queue_name_from_hostname(self):
+        replaced_hostname = self.hostname.replace('.','-')
+        replaced_hostname = str(replaced_hostname)
+        return replaced_hostname
+
+    def get_master_queue_name_from_hostname(self):
+        queue = "master.%s" % (self.get_queue_name_from_hostname())
+        return queue
+
+    def get_routing_key(self):
+        return "%s.host" % (self.get_queue_name_from_hostname())
+
+    def get_master_routing_key(self):
+        return "master.action"
+
+    def mq_default_args(self):
+        current_ms = str(time.time())
+        ret_obj = {}
+        ret_obj['hash'] = hashlib.sha1(current_ms).hexdigest()
+        ret_obj['host'] = self.hostname
+        ret_obj['args'] = []
+        ret_obj['timestamp'] = dt.datetime.now().strftime("%Y-%m-%d %H:%I:%s")
+        return ret_obj
+
+    def ping(self, channel):
+        queue = self.get_queue_name_from_hostname()
+        routing_key = self.get_routing_key()
+        ping_obj = self.mq_default_args()
+        ping_obj['command'] = 'ping'
+
+        res = channel.basic_publish(
+            exchange='chorizo',
+            routing_key = routing_key,
+            body=json.dumps(ping_obj)
+        )
+
+    def start_update(self, channel):
+        queue = self.get_queue_name_from_hostname()
+        routing_key = self.get_routing_key()
+        current_ms = str(time.time())
+        start_update_obj = self.mq_default_args()
+        start_update_obj['command'] = 'start_update'
+
+        res = channel.basic_publish(
+            exchange='chorizo',
+            routing_key = routing_key,
+            body=json.dumps(start_update_obj)
+        )
+
+
 
 class SystemUpdate(SurrogatePK, Model):
     __tablename__ = 'system_updates'
@@ -67,7 +133,7 @@ class ScriptAvailable(SurrogatePK, Model):
 class ScriptsInstalled(SurrogatePK, Model):
     __tablename__ = 'scripts_installed'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
-    system = relationship("System", foreign_keys=[system_id], backref="system")
+    system = relationship("System", foreign_keys=[system_id], backref="scripts")
     script_id = Column(db.Integer, db.ForeignKey('scripts_available.id'))
     script = relationship("ScriptAvailable", foreign_keys=[script_id], backref="script")
     script_order = Column(db.Integer, default=0)

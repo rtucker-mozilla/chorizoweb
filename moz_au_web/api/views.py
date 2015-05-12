@@ -137,6 +137,20 @@ def delete_system(id):
     s.delete()
     return make_response(jsonify({'success': 'success'}), 200)
 
+@blueprint.route("/ping/<hostname>/", methods=["GET"])
+def ping(hostname):
+    s = System.query.filter_by(hostname=hostname).first()
+    if not s is None:
+        s.ping(current_app.channel)
+    return make_response(jsonify({'success': 'success'}), 200)
+
+@blueprint.route("/start_update/<hostname>/", methods=["GET"])
+def start_update(hostname):
+    s = System.query.filter_by(hostname=hostname).first()
+    if not s is None:
+        s.start_update(current_app.channel)
+    return make_response(jsonify({'success': 'success'}), 200)
+
 
 @blueprint.route("/updates/<hostname>", methods=["GET", "POST"])
 def updates(hostname):
@@ -190,6 +204,30 @@ def updatedetail(id):
         'updates': s_ret}
     )
 
+@blueprint.route("/recentupdateonly/", methods=["GET"])
+def recentupdateonly():
+    limit = request.args.get('limit', 20)
+    #s = System.query.filter_by(hostname=hostname).first()
+    #if not s is None:
+    #    updates = SystemUpdate.query.filter_by(system_id=s.id).order_by('-id').limit(limit).all()
+    #else:
+    #    return 'System Not Found'
+    updates = SystemUpdate.query.order_by('-id').limit(limit).all()
+    s_ret = []
+    for b in updates:
+        tmp = {}
+        tmp['id'] = b.id
+        tmp['update_id'] = b.id
+        tmp['created_at'] = b.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            tmp['hostname'] = b.system.hostname
+        except AttributeError:
+            tmp['hostname'] = ''
+        s_ret.append(tmp)
+
+    return jsonify({
+        'updates': s_ret}
+    )
 @blueprint.route("/recentupdatedetail/", methods=["GET"])
 def recentupdatedetail():
     limit = request.args.get('limit', 20)

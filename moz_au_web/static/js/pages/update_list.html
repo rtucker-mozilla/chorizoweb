@@ -1,18 +1,21 @@
 <ul ng-init="init(5)" class="breadcrumb">
     <li><a href="#">Home</a></li>
-    <li>Recent Updates</li>
+    <li>{{ system.hostname }}</li>
 </ul>
 <div>
     <dt>Hostname: <dd>{{ system.hostname }}</dd></dt>
-    <dt>Cronfile:
-        <dd>
-            <a ng-if='system.cronfile != ""' href="#updatecron/{{ system.hostname }}/">{{ system.cronfile }}</a>
-            <a ng-if='system.cronfile == ""' href="#updatecron/{{ system.hostname }}/">Create Cronfile</a>
-        </dd>
-    </dt>
+    <dt>Manage Scripts: <dd><a href="#scripts/{{ system.hostname }}">Manage Run Scripts</a></dd></dt>
 </div>
 <div ng-if="updates.length == 0 && has_loaded == true">
     <h3>No Updates for System</h3>
+</div>
+<div style="margin-top: 5px;">
+    <button class='btn btn-primary' ng-click="ping()">Ping Host</button>
+
+</div>
+<div style="margin-top: 5px;">
+    <button class='btn btn-primary' ng-click="start_update()">Update Host Now</button>
+
 </div>
 <table style="margin-top: 55px;" ng-if="updates.length > 0" class="table table-bordered table-striped">
     <thead>

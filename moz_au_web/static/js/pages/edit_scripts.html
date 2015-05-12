@@ -1,6 +1,6 @@
-<ul ng-init="init(5)" class="breadcrumb">
+<ul ng-init="init()" class="breadcrumb">
     <li><a href="#">Home</a></li>
-    <li>Recent Updates</li>
+    <li><a href="#detail/{{ hostname }}">System Home</a></li>
 </ul>
 <h1>Configure Update Scripts</h1>
 
@@ -15,6 +15,7 @@
 </div>
 
 <div class="simpleDemo row">
+    <div ng-bind="scripts"></div>
 
     <div class="col-md-8">
         <div class="row">

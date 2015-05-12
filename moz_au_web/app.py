@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 '''The app module, containing the app factory function.'''
 from flask import Flask, render_template
+import pika
+
 
 from moz_au_web.settings import ProdConfig
 from moz_au_web.assets import assets
@@ -36,7 +38,29 @@ def register_extensions(app):
     login_manager.init_app(app)
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
+    init_rabbitmq(app)
     return None
+
+def init_rabbitmq(app):
+    rabbitmq_host = app.config['RABBITMQ_HOST']
+    rabbitmq_port = app.config['RABBITMQ_PORT']
+    rabbitmq_user = app.config['RABBITMQ_USER']
+    rabbitmq_pass = app.config['RABBITMQ_PASS']
+    rabbitmq_exchange = app.config['RABBITMQ_EXCHANGE']
+    queue = 'action'
+    routing_key = 'action.host'
+    credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+                       rabbitmq_host,
+                       rabbitmq_port,
+                       "/",
+                       credentials
+                       ))
+    channel = connection.channel()
+    channel.exchange_declare(exchange=rabbitmq_exchange, type='topic')
+    channel.queue_declare(queue, exclusive=False, durable=True)
+    channel.queue_bind(exchange=rabbitmq_exchange, queue=queue, routing_key=routing_key)
+    app.channel = channel
 
 
 def register_blueprints(app):

@@ -1,9 +1,9 @@
 <ul ng-init="init(5)" class="breadcrumb">
     <li><a href="#">Home</a></li>
-    <li><a href="/#/updates/{{ hostname }}/">Recent Updates</a></li>
+    <li><a href="#detail/{{ hostname }}/">System Home</a></li>
     <li>{{ hostname }}</li>
 </ul>
-<div ng-if="updates.length == 0 && has_loaded = true">
+<div ng-if="updates.length == 0 && has_loaded == true">
     <h3>No Updates for System</h3>
 </div>
 <div ng-if="updates.length > 0">
