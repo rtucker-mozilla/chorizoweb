@@ -100,7 +100,7 @@ mozAUApp.directive('delaySearch', function ($timeout) {
 
 
 mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $interval, $routeParams) {
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.id = $routeParams['id'];
     $scope.file_name = ''
     $scope.description = ''
@@ -153,7 +153,7 @@ mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $inter
 
 });
 mozAUApp.controller('ScriptCreateCtrl', function ($scope, $location, $http, $interval) {
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.file_name = ''
     $scope.description = ''
 
@@ -201,7 +201,7 @@ mozAUApp.controller('ScriptCreateCtrl', function ($scope, $location, $http, $int
 });
 
 mozAUApp.controller('ScriptListCtrl', function ($scope, $http, $interval) {
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.scripts = [];
 
     function log(message){
@@ -225,7 +225,7 @@ mozAUApp.controller('ScriptListCtrl', function ($scope, $http, $interval) {
 
 });
 mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.systems = [];
     $scope.recent = [];
     $scope.system = '';
@@ -276,7 +276,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $in
     $scope.hostname = $routeParams['hostname'];
     $scope.has_loaded = false;
     $scope.updates = [];
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.system = {};
     $scope.pings = [];
     function log(message){
@@ -365,7 +365,7 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
     }
 });
 mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
-    $scope.debug = true;
+    $scope.debug = false;
     $scope.hostname = $routeParams['hostname'];
     $scope.installed_script_file_names = [];
     $scope.current_installed_scripts = {};
