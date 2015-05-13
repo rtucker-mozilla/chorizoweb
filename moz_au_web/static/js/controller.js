@@ -260,7 +260,6 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
         log("init called");
         if(!$scope.timer){
             $scope.timer = $interval(function(){
-                log("Timer Fired");
                 recent_updates(20);
             }, 5000);
         }
@@ -273,12 +272,13 @@ mozAUApp.controller('ServerListCtrl', function ($scope, $http, $interval) {
 
 });
 
-mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
+mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $interval) {
     $scope.hostname = $routeParams['hostname'];
     $scope.has_loaded = false;
     $scope.updates = [];
     $scope.debug = true;
     $scope.system = {};
+    $scope.pings = [];
     function log(message){
         if($scope.debug && console){
             console.log(message);
@@ -287,6 +287,13 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
     $scope.ping = function(){
         log("Ping Called");
         $http.get('/api/ping/' + $scope.hostname + '/').success(function(data){
+            log(data);
+        });
+    }
+
+    $scope.start_update = function(){
+        log("start_update Called");
+        $http.get('/api/start_update/' + $scope.hostname + '/').success(function(data){
             log(data);
         });
     }
@@ -300,15 +307,27 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams) {
         });
         $http.get('/api/system/' + $scope.hostname + '/').success(function(data){
             $scope.system = data.system;
+            $scope.pings = data.system.pings;
+            log($scope.pings);
         });
         $scope.has_loaded = true;
     }
-
     $scope.init = function(limit){
-        log($scope.hostname);
+        log("init called");
+        if(!$scope.timer){
+            $scope.timer = $interval(function(){
+                build_update_list(limit);
+            }, 5000);
+        }
         build_update_list(limit);
     }
+
+    $scope.$on('$destroy', function() {
+      $interval.cancel($scope.timer);
+    });
+
 });
+
 mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
     $scope.debug = false;

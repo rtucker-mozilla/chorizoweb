@@ -11,6 +11,7 @@ from moz_au_web.public.forms import LoginForm
 from moz_au_web.user.forms import RegisterForm
 from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
+from celery_tasks import async_ping, async_start_update
 from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, ScriptAvailable, ScriptsInstalled
 import json
 import datetime
@@ -89,7 +90,7 @@ def read_system(id):
     else:
         system = System.query.filter_by(hostname=id).first()
 
-    if system == None:
+    if system is None:
         return make_response(jsonify({'error': 'Cannot find system'}), 404)
 
     s_dict = {}
@@ -97,6 +98,28 @@ def read_system(id):
     s_dict['hostname'] = system.hostname
     s_dict['cronfile'] = system.cronfile
     s_dict['created_at'] = system.created_at
+    s_dict['pings'] = []
+    counter = 0
+    ping_limit = 5
+    for ping in reversed(system.pings):
+        tmp = {}
+        tmp['id'] = ping.id
+        tmp['success'] = ping.success
+        try:
+            tmp['ping_time'] = ping.ping_time.strftime("%Y-%m-%d %H:%I:%S")
+        except AttributeError:
+            tmp['ping_time'] = ''
+
+        try:
+            tmp['pong_time'] = ping.pong_time.strftime("%Y-%m-%d %H:%I:%S")
+        except AttributeError:
+            tmp['pong_time'] = ''
+
+        if counter < ping_limit:
+            s_dict['pings'].append(tmp)
+        else:
+            continue
+        counter += 1
     return make_response(jsonify({'system': s_dict}), 200)
 
 @blueprint.route("/updatecronfile/<id>/", methods=["POST"])
@@ -141,14 +164,15 @@ def delete_system(id):
 def ping(hostname):
     s = System.query.filter_by(hostname=hostname).first()
     if not s is None:
-        s.ping(current_app.channel)
+        res = async_ping.delay(s, current_app.config)
+        #res.wait()
     return make_response(jsonify({'success': 'success'}), 200)
 
 @blueprint.route("/start_update/<hostname>/", methods=["GET"])
 def start_update(hostname):
     s = System.query.filter_by(hostname=hostname).first()
     if not s is None:
-        s.start_update(current_app.channel)
+        res = async_start_update.delay(s, current_app.config)
     return make_response(jsonify({'success': 'success'}), 200)
 
 

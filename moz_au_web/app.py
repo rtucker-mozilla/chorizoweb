@@ -2,6 +2,7 @@
 '''The app module, containing the app factory function.'''
 from flask import Flask, render_template
 import pika
+from celery import Celery
 
 
 from moz_au_web.settings import ProdConfig
@@ -35,10 +36,11 @@ def register_extensions(app):
     bcrypt.init_app(app)
     cache.init_app(app)
     db.init_app(app)
+    db.session.autocommit = True
     login_manager.init_app(app)
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
-    init_rabbitmq(app)
+    #init_rabbitmq(app)
     return None
 
 def init_rabbitmq(app):
@@ -62,6 +64,17 @@ def init_rabbitmq(app):
     channel.queue_bind(exchange=rabbitmq_exchange, queue=queue, routing_key=routing_key)
     app.channel = channel
 
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
 
 def register_blueprints(app):
     app.register_blueprint(public.views.blueprint)

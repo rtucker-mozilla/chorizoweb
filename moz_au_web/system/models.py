@@ -55,8 +55,9 @@ class System(SurrogatePK, Model):
 
     def mq_default_args(self):
         current_ms = str(time.time())
+        hash_string = "%s%s" % (self.hostname, current_ms)
         ret_obj = {}
-        ret_obj['hash'] = hashlib.sha1(current_ms).hexdigest()
+        ret_obj['hash'] = hashlib.sha1(hash_string).hexdigest()
         ret_obj['host'] = self.hostname
         ret_obj['args'] = []
         ret_obj['timestamp'] = dt.datetime.now().strftime("%Y-%m-%d %H:%I:%s")
@@ -73,6 +74,15 @@ class System(SurrogatePK, Model):
             routing_key = routing_key,
             body=json.dumps(ping_obj)
         )
+        try:
+            sp = SystemPing()
+            sp.system = self
+            sp.ping_hash = ping_obj['hash']
+            sp.ping_time = dt.datetime.now()
+            sp.save(commit=True)
+        except Exception ,e:
+            print e
+
 
     def start_update(self, channel):
         queue = self.get_queue_name_from_hostname()
@@ -88,6 +98,14 @@ class System(SurrogatePK, Model):
         )
 
 
+class SystemPing(SurrogatePK, Model):
+    __tablename__ = 'system_pings'
+    system_id = Column(db.Integer, db.ForeignKey('systems.id'))
+    system = relationship("System", foreign_keys=[system_id], backref="pings")
+    ping_hash = Column(db.String(80), unique=True, nullable=False)
+    ping_time = Column(db.DateTime)
+    pong_time = Column(db.DateTime)
+    success = Column(db.Boolean, nullable=False, default=0)
 
 class SystemUpdate(SurrogatePK, Model):
     __tablename__ = 'system_updates'
