@@ -393,16 +393,16 @@ mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
             $scope.installed_script_file_names.push(data.scripts[f].file_name)
         }
         $scope.current_installed_scripts = $scope.models.lists.Installed_Scripts;
-    });
-    $http.get('/api/scripts/').success(function(data){
-        for (f=0;f<data.scripts.length;f++){
-            if ($scope.installed_script_file_names.indexOf(data.scripts[f].file_name) == -1){
-                $scope.models.lists.Available_Scripts.push({
-                    label: data.scripts[f].file_name,
-                    id: data.scripts[f].id
-                });
+        $http.get('/api/scripts/').success(function(data){
+            for (f=0;f<data.scripts.length;f++){
+                if ($scope.installed_script_file_names.indexOf(data.scripts[f].file_name) == -1){
+                    $scope.models.lists.Available_Scripts.push({
+                        label: data.scripts[f].file_name,
+                        id: data.scripts[f].id
+                    });
+                }
             }
-        }
+        });
     });
 
     // Model to JSON for demo purpose
