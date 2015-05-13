@@ -107,6 +107,18 @@ class SystemPing(SurrogatePK, Model):
     pong_time = Column(db.DateTime)
     success = Column(db.Boolean, nullable=False, default=0)
 
+update_groups = db.Table('update_groups',
+    db.Column('system_id', db.Integer, db.ForeignKey('systems.id')),
+    db.Column('update_group_id', db.Integer, db.ForeignKey('update_group.id'))
+)
+
+class UpdateGroup(SurrogatePK, Model):
+    __tablename__ = 'update_group'
+    group_name = Column(db.String(80), unique=True, nullable=False)
+    update_groups = db.relationship('UpdateGroup', secondary=update_groups,
+        backref=db.backref('update_groups', lazy='dynamic'))
+
+
 class SystemUpdate(SurrogatePK, Model):
     __tablename__ = 'system_updates'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
