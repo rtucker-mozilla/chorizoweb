@@ -1,17 +1,20 @@
 from celery import Celery
 from flask import Flask
 import pika
-from moz_au_web.settings import ProdConfig
+from moz_au_web.settings import ProdConfig, DevConfig
 from moz_au_web.extensions import db
 from moz_au_web.system.models import System, SystemPing
 import datetime
 config_object = ProdConfig
+config_object = DevConfig
 
 def init_rabbitmq(config):
     rabbitmq_host = config['RABBITMQ_HOST']
     rabbitmq_port = config['RABBITMQ_PORT']
     rabbitmq_user = config['RABBITMQ_USER']
     rabbitmq_pass = config['RABBITMQ_PASS']
+    rabbitmq_user = 'chorizo'
+    rabbitmq_pass = 'chorizo'
     rabbitmq_exchange = config['RABBITMQ_EXCHANGE']
     queue = 'action'
     routing_key = 'action.host'

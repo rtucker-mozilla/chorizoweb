@@ -36,3 +36,7 @@ Flask-Cache>=0.12
 
 # Elastic Search
 pyes
+
+pika==0.9.14
+puka==0.0.7
+celery==3.1.18
