@@ -61,7 +61,10 @@ if __name__ == '__main__':
     routing_key = "%s.host" % (queue)
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-                       "127.0.0.1"))
+                       "127.0.0.1",
+                       5671
+                       )
+    )
     channel = connection.channel()
     channel.exchange_declare(exchange='chorizo', type='topic')
     channel.queue_declare(queue, exclusive=False)

@@ -55,6 +55,7 @@ celery = make_celery()
 @celery.task()
 def async_ping(system, config):
     rabbit_channel = init_rabbitmq(config)
+    print "ping called"
     system.ping(rabbit_channel)
 
 @celery.task()
