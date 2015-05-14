@@ -116,7 +116,7 @@ class UpdateGroup(SurrogatePK, Model):
     __tablename__ = 'update_group'
     group_name = Column(db.String(80), unique=True, nullable=False)
     update_groups = db.relationship('UpdateGroup', secondary=update_groups,
-        backref=db.backref('update_groups', lazy='dynamic'))
+        backref=db.backref('updategroups', lazy='dynamic'))
 
 
 class SystemUpdate(SurrogatePK, Model):

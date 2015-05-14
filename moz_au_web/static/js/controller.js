@@ -38,6 +38,16 @@ mozAUApp.config(function($routeProvider){
         controller  : 'ServerListCtrl'
     })
 
+    .when('/groups/', {
+        templateUrl : '/static/js/pages/group_list.html',
+        controller  : 'GroupListCtrl'
+    })
+
+    .when('/groups/create/', {
+        templateUrl : '/static/js/pages/group_create.html',
+        controller  : 'GroupCreateCtrl'
+    })
+
     .when('/scripts/create/', {
         templateUrl : '/static/js/pages/script_create.html',
         controller  : 'ScriptCreateCtrl'
@@ -320,6 +330,70 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $in
             }, 5000);
         }
         build_update_list(limit);
+    }
+
+    $scope.$on('$destroy', function() {
+      $interval.cancel($scope.timer);
+    });
+
+});
+
+mozAUApp.controller('GroupCreateCtrl', function ($scope, $http, $sce) {
+    $scope.has_loaded = false;
+    $scope.debug = true;
+    $scope.group_name = ""
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+
+    $scope.createGroup = function(event){
+        log("function called");
+        log("group_name: " + $scope.group_name);
+        data = {};
+        data['group_name'] = $scope.group_name;
+        $http({
+            withCredentials: false,
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            url: '/api/groups/create/',
+            data: JSON.stringify(data)
+        }).success(function(data){
+            log("group created");
+            $scope.success_message = $sce.trustAsHtml(alert_text);
+        });
+    }
+
+    $scope.init = function(limit){
+    }
+
+
+});
+mozAUApp.controller('GroupListCtrl', function ($scope, $http, $interval) {
+    $scope.has_loaded = false;
+    $scope.debug = true;
+    $scope.groups = [];
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+
+    function build_group_list(){
+        $http.get('/api/groups/').success(function(data){
+            $scope.groups = data.groups;
+        });
+        $scope.has_loaded = true;
+    }
+    $scope.init = function(limit){
+        log("init called");
+        if(!$scope.timer){
+            $scope.timer = $interval(function(){
+                build_group_list(limit);
+            }, 5000);
+        }
+        build_group_list(limit);
     }
 
     $scope.$on('$destroy', function() {

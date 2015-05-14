@@ -1,0 +1,25 @@
+<div class="col-md-6">
+    <div class="row">
+        <h1>
+            <span>Group List</span>
+            <button class='btn btn-primary pull-right' onclick="location.href='/#/groups/create/';">Create Group</button>
+        </h1>
+        <hr/>
+    </div>
+    <div class="row">
+        <div ng-init="init()" ng-controller="GroupListCtrl">
+            <table style="margin-top: 55px;" ng-if="groups.length > 0" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>Group</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="group in groups | filter:query">
+                    <td><a href="#groups/detail/{{ group.id }}/">{{ group.group_name }}</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

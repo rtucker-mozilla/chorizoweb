@@ -20,7 +20,7 @@ app = create_app(DevConfig)
 
 manager = Manager(app)
 
-AMQP_URL = "amqp://127.0.0.1/"
+AMQP_URL = "amqp://127.0.0.1:5671/"
 EXCHANGE='chorizo'
 QUEUE_CNT = 32
 BURST_SIZE = 120

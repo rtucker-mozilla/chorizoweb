@@ -13,6 +13,7 @@ from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
 from celery_tasks import async_ping, async_start_update
 from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, ScriptAvailable, ScriptsInstalled
+from moz_au_web.system.models import UpdateGroup
 import json
 import datetime
 
@@ -76,6 +77,40 @@ def cronfile(id):
     s_dict['hostname'] = system.hostname
     s_dict['cronfile'] = system.cronfile
     return make_response(jsonify({'system': s_dict}), 200)
+
+@blueprint.route("/groups/", methods=["GET"])
+def groups():
+    limit=request.args.get('limit', 100)
+    offset=request.args.get('offset', 0)
+
+    all_groups = UpdateGroup.query.all()
+    total_count = len(all_groups)
+    r_list = []
+    for g in all_groups:
+        tmp = {}
+        tmp['id'] = g.id
+        tmp['group_name'] = g.group_name
+        r_list.append(tmp)
+    return jsonify({
+        'total_count': total_count,
+        'limit': limit,
+        'offset': offset,
+        'groups': r_list}
+    )
+    return make_response(jsonify({'groups': s_dict}), 200)
+
+@blueprint.route("/groups/create/", methods=["POST"])
+def groups_create():
+    json_data = request.get_json()
+    try:
+        u_group = UpdateGroup()
+        u_group.group_name = json_data.get('group_name')
+        u_group.save()
+    except:
+        return make_response(jsonify({'groups': s_dict}), 200)
+
+    message = 'Group Created'
+    return make_response(jsonify({'message': message}), 200)
 
 @blueprint.route("/system/<id>/", methods=["GET"])
 def read_system(id):
