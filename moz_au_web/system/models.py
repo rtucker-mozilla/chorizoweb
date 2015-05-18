@@ -115,7 +115,7 @@ update_groups = db.Table('update_groups',
 class UpdateGroup(SurrogatePK, Model):
     __tablename__ = 'update_group'
     group_name = Column(db.String(80), unique=True, nullable=False)
-    update_groups = db.relationship('UpdateGroup', secondary=update_groups,
+    systems = db.relationship('System', secondary=update_groups,
         backref=db.backref('updategroups', lazy='dynamic'))
 
 
@@ -162,8 +162,8 @@ class ScriptAvailable(SurrogatePK, Model):
 
 class ScriptsInstalled(SurrogatePK, Model):
     __tablename__ = 'scripts_installed'
-    system_id = Column(db.Integer, db.ForeignKey('systems.id'))
-    system = relationship("System", foreign_keys=[system_id], backref="scripts")
+    group_id = Column(db.Integer, db.ForeignKey('update_group.id'))
+    group = relationship("UpdateGroup", foreign_keys=[group_id], backref="scripts")
     script_id = Column(db.Integer, db.ForeignKey('scripts_available.id'))
     script = relationship("ScriptAvailable", foreign_keys=[script_id], backref="script")
     script_order = Column(db.Integer, default=0)

@@ -38,16 +38,18 @@ def system():
     offset=request.args.get('offset', 0)
     hostname=request.args.get('hostname', 0)
     systems = System.query
-    total = len(systems.all())
     if hostname:
+        total = 1
         systems = systems.filter(System.hostname.like('%' + hostname + '%'))
-
-    systems = systems.limit(limit).offset(offset).all()
+    else:
+        total = len(systems.all())
+        systems = systems.limit(limit).offset(offset).all()
     for s in systems:
         s_dict = {}
         s_dict['hostname'] = s.hostname
         s_dict['cronfile'] = s.cronfile
         s_dict['created_at'] = s.created_at
+        s_dict['id'] = s.id
         ret.append(s_dict)
     return jsonify({
         'total_count': total,
@@ -96,6 +98,34 @@ def groups():
         'limit': limit,
         'offset': offset,
         'groups': r_list}
+    )
+    return make_response(jsonify({'groups': s_dict}), 200)
+
+@blueprint.route("/groups/<id>/", methods=["GET"])
+def get_group(id):
+    limit=request.args.get('limit', 100)
+    offset=request.args.get('offset', 0)
+    group = UpdateGroup.get_by_id(id)
+    if not group is None:
+        r_group = {}
+        r_group['id'] = group.id
+        r_group['group_name'] = group.group_name
+        r_group['update_systems'] = []
+        for system in group.systems:
+            tmp = {}
+            tmp['id'] = system.id
+            tmp['hostname'] = system.hostname
+            r_group['update_systems'].append(tmp)
+        total_count = 1
+    else:
+        r_group = None
+        total_count = 0
+
+    return jsonify({
+        'total_count': total_count,
+        'limit': limit,
+        'offset': offset,
+        'group': r_group}
     )
     return make_response(jsonify({'groups': s_dict}), 200)
 
@@ -448,6 +478,98 @@ def updatehostscripts(hostname):
         'scripts': s_dict}
     )
 
+@blueprint.route("/updategroupscripts/<group_id>/", methods=["GET", "POST"])
+def updategroupscripts(group_id):
+    ret = []
+    s_dict = []
+    if request.method == "POST":
+        group = UpdateGroup.get_by_id(group_id)
+        current_scripts = ScriptsInstalled.query.filter_by(group=group).all()
+        for c in current_scripts:
+            c.delete()
+        if not group is None:
+            data = request.get_json()
+            order = 0
+            for i in data:
+                available_script = ScriptAvailable.get_by_id(i['id'])
+                if not available_script is None:
+                    tmp = ScriptsInstalled()
+                    tmp.script = available_script
+                    tmp.script_order = order
+                    tmp.group = group
+                    tmp.save()
+                    order += 1
+            return make_response(jsonify( { 'status': 'OK' } ), 200)
+        else:
+            return make_response(jsonify( { 'status': 'ERROR' } ), 404)
+
+@blueprint.route("/updategrouphosts/<group_id>/", methods=["GET", "POST"])
+def updategrouphosts(group_id):
+    ret = []
+    s_dict = []
+    if request.method == "POST":
+        group = UpdateGroup.get_by_id(group_id)
+        total_count = 1
+        if not group is None:
+            # Clear out the existing groups
+            group.systems[:] = []
+            group.save()
+            json_data = request.get_json()
+            group_systems_list = []
+            for system in json_data:
+                tmp_s = System.get_by_id(system['id'])
+                group_systems_list.append(tmp_s)
+            if len(group_systems_list) > 0:
+                group.systems = group_systems_list
+                group.save()
+            return make_response(jsonify( { 'status': 'OK' } ), 200)
+        else:
+            return make_response(jsonify( { 'status': 'ERROR' } ), 404)
+
+    return jsonify({
+        'total_count': len(s_dict),
+        'limit': 0,
+        'offset': 0,
+        'scripts': s_dict}
+    )
+@blueprint.route("/grouphosts/<id>/", methods=["GET"])
+def grouphosts(id):
+    ret = []
+    s_dict = []
+    r_systems = []
+    group = UpdateGroup.get_by_id(id)
+    if not group is None:
+        for system in group.systems:
+            tmp = {}
+            tmp['hostname'] = system.hostname
+            tmp['id'] = system.id
+            r_systems.append(tmp)
+
+    return jsonify({
+        'total_count': len(r_systems),
+        'limit': 0,
+        'offset': 0,
+        'systems': r_systems}
+    )
+
+@blueprint.route("/groupscripts/<group_id>/", methods=["GET"])
+def groupscripts(group_id):
+    ret = []
+    s_dict = []
+    group = UpdateGroup.get_by_id(group_id)
+    all_scripts = ScriptsInstalled.query.filter_by(group_id = group.id).order_by('script_order').all()
+    for s in all_scripts:
+        tmp = {}
+        tmp['id'] = s.script.id
+        tmp['file_name'] = s.script.file_name
+        tmp['order'] = s.script_order
+        s_dict.append(tmp)
+    return jsonify({
+        'total_count': len(s_dict),
+        'limit': 0,
+        'offset': 0,
+        'scripts': s_dict}
+    )
 @blueprint.route("/hostscripts/<hostname>/", methods=["GET"])
 def hostscripts(hostname):
     ret = []

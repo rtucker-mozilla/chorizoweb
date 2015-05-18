@@ -29,7 +29,7 @@ function AccordionDemoCtrl($scope) {
     isFirstDisabled: false
   };
 }
-var mozAUApp = angular.module('mozAUApp', ['ngRoute','ui.bootstrap','dndLists']);
+var mozAUApp = angular.module('mozAUApp', ['ngRoute','ui.bootstrap','dndLists', 'flash']);
 mozAUApp.config(function($routeProvider){
     $routeProvider
     // route for the home page
@@ -48,6 +48,16 @@ mozAUApp.config(function($routeProvider){
         controller  : 'GroupCreateCtrl'
     })
 
+    .when('/groups/edit_hosts/:id', {
+        templateUrl : '/static/js/pages/group_host_edit.html',
+        controller  : 'GroupHostEditCtrl'
+    })
+
+    .when('/groups/detail/:id', {
+        templateUrl : '/static/js/pages/group_detail.html',
+        controller  : 'GroupDetailCtrl'
+    })
+
     .when('/scripts/create/', {
         templateUrl : '/static/js/pages/script_create.html',
         controller  : 'ScriptCreateCtrl'
@@ -64,7 +74,7 @@ mozAUApp.config(function($routeProvider){
         controller  : 'UpdateListCtrl'
     })
 
-    .when('/scripts/:hostname', {
+    .when('/groups/edit_scripts/:id', {
         templateUrl : '/static/js/pages/edit_scripts.html',
         controller  : 'ScriptsCtrl'
     })
@@ -338,7 +348,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $in
 
 });
 
-mozAUApp.controller('GroupCreateCtrl', function ($scope, $http, $sce) {
+mozAUApp.controller('GroupCreateCtrl', function ($scope, $http, $sce, Flash) {
     $scope.has_loaded = false;
     $scope.debug = true;
     $scope.group_name = ""
@@ -360,8 +370,8 @@ mozAUApp.controller('GroupCreateCtrl', function ($scope, $http, $sce) {
             url: '/api/groups/create/',
             data: JSON.stringify(data)
         }).success(function(data){
-            log("group created");
-            $scope.success_message = $sce.trustAsHtml(alert_text);
+            var message = "Group Created";
+            Flash.create('success', message);
         });
     }
 
@@ -370,6 +380,7 @@ mozAUApp.controller('GroupCreateCtrl', function ($scope, $http, $sce) {
 
 
 });
+
 mozAUApp.controller('GroupListCtrl', function ($scope, $http, $interval) {
     $scope.has_loaded = false;
     $scope.debug = true;
@@ -402,6 +413,52 @@ mozAUApp.controller('GroupListCtrl', function ($scope, $http, $interval) {
 
 });
 
+mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $routeParams) {
+    $scope.id = $routeParams['id'];
+    $scope.has_loaded = false;
+    $scope.debug = true;
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+
+    function get_group(){
+        $http.get('/api/groups/' + $scope.id + '/').success(function(data){
+            $scope.group = data.group;
+        });
+        $scope.has_loaded = true;
+    }
+    function get_scripts(){
+        $http.get('/api/groupscripts/' + $scope.id + '/').success(function(data){
+            $scope.scripts = data.scripts;
+        });
+        $scope.has_loaded = true;
+    }
+
+    var changeLocation = function(url, forceReload) {
+      $scope = $scope || angular.element(document).scope();
+      if(forceReload || $scope.$$phase) {
+        window.location = url;
+      }
+      else {
+        $location.path(url);
+        $scope.$apply();
+      }
+    };
+
+    $scope.editGroupHosts = function(){
+        changeLocation("#/groups/edit_hosts/" + $scope.id + '/');
+    }
+    $scope.editGroupScripts = function(){
+        changeLocation("#/groups/edit_scripts/" + $scope.id + '/');
+    }
+    $scope.init = function(){
+        get_group();
+        get_scripts();
+    }
+
+});
 mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParams) {
     $scope.hostname = $routeParams['hostname'];
     $scope.debug = false;
@@ -440,7 +497,7 @@ mozAUApp.controller('UpdateCronCtrl', function ($scope, $http, $sce, $routeParam
 });
 mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
     $scope.debug = false;
-    $scope.hostname = $routeParams['hostname'];
+    $scope.id = $routeParams['id'];
     $scope.installed_script_file_names = [];
     $scope.current_installed_scripts = {};
     function log(message){
@@ -458,7 +515,7 @@ mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
     };
 
     // Generate initial model
-    $http.get('/api/hostscripts/' + $scope.hostname + '/').success(function(data){
+    $http.get('/api/groupscripts/' + $scope.id + '/').success(function(data){
         for (f=0;f<data.scripts.length;f++){
             $scope.models.lists.Installed_Scripts.push({
                 label: data.scripts[f].file_name,
@@ -486,7 +543,7 @@ mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
                 withCredentials: false,
                 method: 'post',
                 headers: { 'Content-Type': 'application/json' },
-                url: '/api/updatehostscripts/' + $scope.hostname + '/',
+                url: '/api/updategroupscripts/' + $scope.id + '/',
                 data: $scope.modelAsJson
             }).success(function(data){
                 log("Successfully Saved");
@@ -499,6 +556,83 @@ mozAUApp.controller('ScriptsCtrl', function ($scope, $http, $routeParams) {
 
     $scope.init = function(limit){
         log('here in model');
+    }
+
+});
+mozAUApp.controller('GroupHostEditCtrl', function ($scope, $http, $routeParams) {
+    $scope.debug = true;
+    $scope.id = $routeParams['id'];
+    $scope.enabled_host_names = [];
+    $scope.s_group = {};
+    $scope.current_enabled_hosts = {};
+    function log(message){
+        if($scope.debug && console){
+            console.log(message);
+        }
+    }
+
+    $scope.models = {
+        selected: null,
+        lists: {
+            "Enabled_Hosts": [],
+            "Available_Hosts": []
+        }
+    };
+
+    // Generate initial model
+        $http.get('/api/grouphosts/' + $scope.id + '/').success(function(data){
+            for (f=0;f<data.systems.length;f++){
+                $scope.models.lists.Enabled_Hosts.push({
+                    label: data.systems[f].hostname,
+                    id: data.systems[f].id
+                });
+                $scope.enabled_host_names.push(data.systems[f].hostname);
+            }
+            log("Start scope.models.lists.Enabled_Hosts");
+            log($scope.models.lists.Enabled_Hosts);
+            log("End scope.models.lists.Enabled_Hosts");
+            log("Start $scope.enabled_host_names");
+            log($scope.enabled_host_names);
+            log("End $scope.enabled_host_names");
+            $scope.current_enabled_hosts = $scope.models.lists.Enabled_Hosts;
+            $http.get('/api/system/').success(function(data){
+                for (f=0;f<data.systems.length;f++){
+                    if ($scope.enabled_host_names.indexOf(data.systems[f].hostname) == -1){
+                        log("Not Found: " + data.systems[f].hostname);
+                        $scope.models.lists.Available_Hosts.push({
+                            label: data.systems[f].hostname,
+                            id: data.systems[f].id
+                        });
+                    } else {
+                        log("Found: " + data.systems[f].hostname);
+                    }
+                }
+            });
+        });
+
+
+    // Model to JSON for demo purpose
+    $scope.save = function(){
+        $scope.modelAsJson = angular.toJson($scope.models.lists.Enabled_Hosts, true);
+            $http({
+                withCredentials: false,
+                method: 'post',
+                headers: { 'Content-Type': 'application/json' },
+                url: '/api/updategrouphosts/' + $scope.id + '/',
+                data: $scope.modelAsJson
+            }).success(function(data){
+                log("Successfully Saved");
+            }).error(function(data){
+                log(data);
+        });
+
+    }
+
+
+    $scope.init = function(){
+        $http.get('/api/groups/' + $scope.id + '/').success(function(data){
+            $scope.s_group = data.group;
+        });
     }
 
 });

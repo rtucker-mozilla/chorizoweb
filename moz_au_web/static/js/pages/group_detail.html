@@ -1,0 +1,45 @@
+<div  ng-init="init()" ng-controller="GroupDetailCtrl" class="col-md-6">
+    <div class="row">
+        <h1>
+            <span>Group Detail</span>
+            <button class='btn btn-primary pull-right' onclick="location.href='/#/groups/create/';">Create Group</button>
+        </h1>
+        <hr/>
+    </div>
+    <div class="row">
+        <div>
+            <h3>Group Hosts</h3>
+            <table style="margin-top: 55px;" ng-if="group != none" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>Hosts in Group&nbsp; <button ng-click="editGroupHosts()" class='btn btn-primary btn-small pull-right'>Edit Group Hosts</button></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="system in group.update_systems | filter:query">
+                    <td colspan="2"><a href="#detail/{{ system.id }}/">{{ system.hostname }}</a></td>
+                </tr>
+                </tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <h3>Update Scripts</h3>
+            <table style="margin-top: 55px;" ng-if="group != none" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>Scripts for Host&nbsp;<button ng-click="editGroupScripts()" class='btn btn-primary btn-small pull-right'>Edit Group Scripts</button></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="script in scripts | filter:query">
+                <td> {{ script.file_name }} </td>
+                </tr>
+                </tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+</div>
