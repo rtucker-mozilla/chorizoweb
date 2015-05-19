@@ -296,7 +296,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $in
     $scope.hostname = $routeParams['hostname'];
     $scope.has_loaded = false;
     $scope.updates = [];
-    $scope.debug = false;
+    $scope.debug = true;
     $scope.system = {};
     $scope.pings = [];
     function log(message){
@@ -313,7 +313,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $in
 
     $scope.start_update = function(){
         log("start_update Called");
-        $http.get('/api/start_update/' + $scope.hostname + '/').success(function(data){
+        $http.get('/api/start_system_update/' + $scope.hostname + '/').success(function(data){
             log(data);
         });
     }

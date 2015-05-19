@@ -1,20 +1,22 @@
 from celery import Celery
+import os
 from flask import Flask
 import pika
 from moz_au_web.settings import ProdConfig, DevConfig
 from moz_au_web.extensions import db
 from moz_au_web.system.models import System, SystemPing
 import datetime
-config_object = ProdConfig
-config_object = DevConfig
+ENV = os.environ.get('ENV', False)
+if ENV == 'DEV':
+    config_object = DevConfig
+else:
+    config_object = ProdConfig
 
 def init_rabbitmq(config):
     rabbitmq_host = config['RABBITMQ_HOST']
     rabbitmq_port = config['RABBITMQ_PORT']
     rabbitmq_user = config['RABBITMQ_USER']
     rabbitmq_pass = config['RABBITMQ_PASS']
-    rabbitmq_user = 'chorizo'
-    rabbitmq_pass = 'chorizo'
     rabbitmq_exchange = config['RABBITMQ_EXCHANGE']
     queue = 'action'
     routing_key = 'action.host'
@@ -59,16 +61,23 @@ def async_ping(system, config):
 
 @celery.task()
 def async_pong(hostname, ping_hash, config):
-    global rabbit_channel
-    system = System.query.filter_by(hostname = hostname).first()
-    if not system is None:
-        sp = SystemPing.query.filter_by(system = system).filter_by(ping_hash=ping_hash).first()
+    db.session.commit()
+    db.session.close()
+    sp = SystemPing.query.filter_by(ping_hash=ping_hash).first()
     if not sp is None:
+        print "We have system ping object"
         sp.pong_time = datetime.datetime.now()
         sp.success = True
         sp.save()
+    else:
+        print "We do not have system ping object"
 
 @celery.task()
-def async_start_update(system, config):
+def async_group_start_update(group, config):
+    channel = init_rabbitmq(config)
+    group.start_update(channel)
+
+@celery.task()
+def async_system_start_update(system, config):
     channel = init_rabbitmq(config)
     system.start_update(channel)

@@ -118,6 +118,35 @@ class UpdateGroup(SurrogatePK, Model):
     systems = db.relationship('System', secondary=update_groups,
         backref=db.backref('updategroups', lazy='dynamic'))
 
+    def get_queue_name_from_hostname(self, hostname):
+        replaced_hostname = hostname.replace('.','-')
+        replaced_hostname = str(replaced_hostname)
+        return replaced_hostname
+
+    def get_master_queue_name_from_hostname(self):
+        queue = "master.%s" % (self.get_queue_name_from_hostname())
+        return queue
+
+    def get_routing_key(self, hostname):
+        return "%s.host" % (self.get_queue_name_from_hostname(hostname))
+
+    def get_master_routing_key(self):
+        return "master.action"
+        
+    def start_update(self, channel):
+        for host in self.systems:
+            queue = self.get_queue_name_from_hostname(host.hostname)
+            routing_key = self.get_routing_key(hostname)
+            current_ms = str(time.time())
+            start_update_obj = self.mq_default_args()
+            start_update_obj['command'] = 'start_update'
+
+            res = channel.basic_publish(
+                exchange='chorizo',
+                routing_key = routing_key,
+                body=json.dumps(start_update_obj)
+            )
+
 
 class SystemUpdate(SurrogatePK, Model):
     __tablename__ = 'system_updates'

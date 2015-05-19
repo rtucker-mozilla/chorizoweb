@@ -5,8 +5,15 @@ import datetime
 import logging
 import json
 import hashlib
-logging.basicConfig()
 import sys
+import os
+from moz_au_web.settings import ProdConfig, DevConfig
+logging.basicConfig()
+ENV = os.environ.get('ENV', False)
+if ENV == 'DEV':
+    config_object = DevConfig
+else:
+    config_object = ProdConfig
 
 def ping(channel, routing_key):
     current_ms = str(time.time())
@@ -61,14 +68,14 @@ if __name__ == '__main__':
     routing_key = "%s.host" % (queue)
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-                       "127.0.0.1",
-                       5671
+                       config_object.RABBITMQ_HOST,
+                       config_object.RABBITMQ_PORT
                        )
     )
     channel = connection.channel()
-    channel.exchange_declare(exchange='chorizo', type='topic')
+    channel.exchange_declare(exchange=config_object.RABBITMQ_EXCHANGE, type='topic')
     channel.queue_declare(queue, exclusive=False)
-    channel.queue_bind(exchange="chorizo", queue=queue, routing_key=routing_key)
+    channel.queue_bind(exchange=config_object.RABBITMQ_EXCHANGE, queue=queue, routing_key=routing_key)
     if str(action) == 'ping':
         ping(channel, routing_key)
     elif str(action) == 'start_update':

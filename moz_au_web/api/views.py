@@ -11,7 +11,7 @@ from moz_au_web.public.forms import LoginForm
 from moz_au_web.user.forms import RegisterForm
 from moz_au_web.utils import flash_errors
 from moz_au_web.database import db
-from celery_tasks import async_ping, async_start_update
+from celery_tasks import async_ping, async_group_start_update, async_system_start_update
 from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, ScriptAvailable, ScriptsInstalled
 from moz_au_web.system.models import UpdateGroup
 import json
@@ -225,28 +225,39 @@ def delete_system(id):
     s.delete()
     return make_response(jsonify({'success': 'success'}), 200)
 
-@blueprint.route("/ping/<hostname>/", methods=["GET"])
-def ping(hostname):
-    s = System.query.filter_by(hostname=hostname).first()
+@blueprint.route("/ping/<system_id>/", methods=["GET"])
+def ping(system_id):
+    s = System.query.filter_by(id=system_id).first()
     if not s is None:
         res = async_ping.delay(s, current_app.config)
         #res.wait()
+    else:
+        print "Could not find system"
     return make_response(jsonify({'success': 'success'}), 200)
 
-@blueprint.route("/start_update/<hostname>/", methods=["GET"])
-def start_update(hostname):
-    s = System.query.filter_by(hostname=hostname).first()
-    if not s is None:
-        res = async_start_update.delay(s, current_app.config)
+@blueprint.route("/start_system_update/<system_id>/", methods=["GET"])
+def start_system_update(system_id):
+    system = System.get_by_id(system_id)
+    if not system is None:
+        res = async_system_start_update.delay(system, current_app.config)
+        return make_response(jsonify({'success': 'success'}), 200)
+    else:
+        return make_response(jsonify({'success': 'Could not find host'}), 500)
+
+@blueprint.route("/start_update/<group_id>/", methods=["GET"])
+def start_update(group_id):
+    group = UpdateGroup.get_by_id(group_id)
+    if not group is None:
+        res = async_start_update.delay(group, current_app.config)
     return make_response(jsonify({'success': 'success'}), 200)
 
 
-@blueprint.route("/updates/<hostname>", methods=["GET", "POST"])
-def updates(hostname):
+@blueprint.route("/updates/<system_id>", methods=["GET", "POST"])
+def updates(system_id):
     ret = []
     limit=request.args.get('limit', 100)
     offset=request.args.get('offset', 0)
-    s_system = System.query.filter_by(hostname=hostname).first()
+    s_system = System.get_by_id(system_id)
     total_count = SystemUpdate.query.filter(SystemUpdate.system==s_system).count()
     updates = SystemUpdate.query.filter(SystemUpdate.system==s_system).order_by('-id').limit(limit).all()
     s_ret = []
@@ -254,7 +265,7 @@ def updates(hostname):
         tmp = {}
         tmp['id'] = b.id
         tmp['created_at'] = b.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        tmp['hostname'] = hostname
+        tmp['hostname'] = s_system.hostname
         tmp['current'] = b.is_current
         tmp['status'] = b.status_code
         s_ret.append(tmp)

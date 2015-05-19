@@ -8,6 +8,8 @@ import datetime
 import hashlib
 import collections
 import json
+import os
+
 from flask.ext.script import Manager
 from moz_au_web.app import create_app
 from threading import Thread
@@ -16,11 +18,18 @@ from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, Syst
 from moz_au_web.database import db
 from celery_tasks import async_pong
 
+ENV = os.environ.get('ENV', False)
+if ENV == 'DEV':
+    config_object = DevConfig
+else:
+    config_object = ProdConfig
+
 app = create_app(DevConfig)
 
 manager = Manager(app)
 
-AMQP_URL = "amqp://127.0.0.1:5671/"
+AMQP_URL = app.config.get("AMQP_URL", "amqp://127.0.0.1/")
+print AMQP_URL
 EXCHANGE='chorizo'
 QUEUE_CNT = 32
 BURST_SIZE = 120
@@ -222,20 +231,12 @@ def parse_message(msg, channel):
     action = str(json_obj['Command'])
     if action == 'pong':
         ping_hash = str(json_obj['Hash'])
-        print "In async pong"
         async_pong(hostname, ping_hash, app.config)
-        #sp = SystemPing.query.filter_by(system_id = host.id).filter_by(ping_hash=ping_hash).first()
-        #if not sp is None:
-            #sp.pong_time = datetime.datetime.now()
-            #sp.success = True
-            #sp.save()
-        #else:
-            #import pdb; pdb.set_trace()
     elif action == "start_update_resp":
         start_update_success = start_update(host)
         hostname = host.hostname
         running_updates[hostname] = {}
-        running_updates[hostname]['scripts_to_run'] = [s.script.file_name for s in host.scripts]
+        running_updates[hostname]['scripts_to_run'] = [s.script.file_name for s in host.updategroups[0].scripts]
         running_updates[hostname]['scripts_ran'] = []
         run_updates(channel)
     elif action == "exec_response":
