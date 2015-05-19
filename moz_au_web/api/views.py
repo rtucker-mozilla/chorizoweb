@@ -238,6 +238,8 @@ def ping(hostname):
 @blueprint.route("/start_system_update/<system_id>/", methods=["GET"])
 def start_system_update(system_id):
     system = System.get_by_id(system_id)
+    if system is None:
+        system = system.get_by_hostname(system_id)
     if not system is None:
         res = async_system_start_update.delay(system, current_app.config)
         return make_response(jsonify({'success': 'success'}), 200)
