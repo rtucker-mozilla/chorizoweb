@@ -24,7 +24,7 @@ if ENV == 'DEV':
 else:
     config_object = ProdConfig
 
-app = create_app(DevConfig)
+app = create_app(config_object)
 
 manager = Manager(app)
 
