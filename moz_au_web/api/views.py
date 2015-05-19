@@ -225,9 +225,9 @@ def delete_system(id):
     s.delete()
     return make_response(jsonify({'success': 'success'}), 200)
 
-@blueprint.route("/ping/<system_id>/", methods=["GET"])
-def ping(system_id):
-    s = System.query.filter_by(id=system_id).first()
+@blueprint.route("/ping/<hostname>/", methods=["GET"])
+def ping(hostname):
+    s = System.query.filter_by(hostname=hostname).first()
     if not s is None:
         res = async_ping.delay(s, current_app.config)
         #res.wait()
