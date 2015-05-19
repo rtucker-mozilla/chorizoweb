@@ -28,7 +28,7 @@ app = create_app(DevConfig)
 
 manager = Manager(app)
 
-AMQP_URL = app.config.get("AMQP_URL", "amqp://127.0.0.1/")
+AMQP_URL = app.config.get("AMQP_URL", "amqp://127.0.0.1:5671/")
 print AMQP_URL
 EXCHANGE='chorizo'
 QUEUE_CNT = 32
