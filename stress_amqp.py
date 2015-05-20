@@ -18,12 +18,11 @@ from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, Syst
 from moz_au_web.database import db
 from celery_tasks import async_pong
 import logging
-logging.setLevel(2)
 LOG_FORMAT = (
     '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
     '\t%(message)s'
     )
-logging.basicConfig(format=LOG_FORMAT)
+logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
 
 logging.error("Loaded")
 print "Loaded with print statement"
