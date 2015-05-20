@@ -110,8 +110,12 @@ class SystemPing(SurrogatePK, Model):
     system = relationship("System", foreign_keys=[system_id], backref="pings")
     ping_hash = Column(db.String(80), unique=True, nullable=False)
     ping_time = Column(db.DateTime)
+
+class SystemPong(SurrogatePK, Model):
+    __tablename__ = 'system_pongs'
+    system_id = Column(db.Integer, db.ForeignKey('systems.id'))
+    system = relationship("System", foreign_keys=[system_id], backref="pings")
     pong_time = Column(db.DateTime)
-    success = Column(db.Boolean, nullable=False, default=0)
 
 update_groups = db.Table('update_groups',
     db.Column('system_id', db.Integer, db.ForeignKey('systems.id')),
