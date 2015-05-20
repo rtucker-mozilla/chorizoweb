@@ -80,8 +80,13 @@ class System(SurrogatePK, Model):
             sp.ping_hash = ping_obj['hash']
             sp.ping_time = dt.datetime.now()
             sp.save(commit=True)
+            return sp.ping_hash
         except Exception ,e:
             print e
+
+        return False
+
+
 
 
     def start_update(self, channel):
@@ -132,7 +137,7 @@ class UpdateGroup(SurrogatePK, Model):
 
     def get_master_routing_key(self):
         return "master.action"
-        
+
     def start_update(self, channel):
         for host in self.systems:
             queue = self.get_queue_name_from_hostname(host.hostname)
