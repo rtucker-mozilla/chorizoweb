@@ -12,11 +12,15 @@ if ENV == 'DEV':
 else:
     config_object = ProdConfig
 
+from celery.utils.log import get_task_logger
+log = get_task_logger(__name__)
+
 def init_rabbitmq(config):
     rabbitmq_host = config['RABBITMQ_HOST']
     rabbitmq_port = config['RABBITMQ_PORT']
     rabbitmq_user = config['RABBITMQ_USER']
     rabbitmq_pass = config['RABBITMQ_PASS']
+    log.info("init_rabbitmq: rabbitmq_host" % (rabbitmq_host))
     rabbitmq_exchange = config['RABBITMQ_EXCHANGE']
     queue = 'action'
     routing_key = 'action.host'
