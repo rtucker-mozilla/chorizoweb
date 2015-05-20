@@ -113,7 +113,14 @@ class SystemPing(SurrogatePK, Model):
 
     @property
     def success(self):
-        return len(SystemPong.query.filter_by(ping_hash=self.ping_hash).first()) == 1
+        try:
+            pong = SystemPong.query.filter_by(ping_hash=self.ping_hash).first()
+            if pong:
+                return 1
+            else:
+                return 0
+        except TypeError:
+            return 0
 
     @property
     def pong_time(self):
