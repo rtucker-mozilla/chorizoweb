@@ -68,16 +68,16 @@ def async_ping(system, config):
 def async_pong(hostname, ping_hash, config):
     current_app.logger.info("async_pong hostname: %s" % (hostname))
     current_app.logger.info("async_pong ping_hash: %s" % (ping_hash))
-    db.session.commit()
-    db.session.close()
+    db.session.remove()
     sp = SystemPing.query.filter_by(ping_hash=ping_hash).first()
     if not sp is None:
-        print "We have system ping object"
+        current_app.logger.info("We have system ping object ping_hash: %s" % (ping_hash))
         sp.pong_time = datetime.datetime.now()
         sp.success = True
         sp.save()
     else:
-        print "We do not have system ping object"
+        current_app.logger.info("We do not have system ping object ping_hash: %s" % (ping_hash))
+    db.session.remove()
 
 @celery.task()
 def async_group_start_update(group, config):
