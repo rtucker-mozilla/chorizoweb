@@ -63,6 +63,11 @@ mozAUApp.config(function($routeProvider){
         controller  : 'ScriptCreateCtrl'
     })
 
+    .when('/scripts/', {
+        templateUrl : '/static/js/pages/scripts_list.html',
+        controller  : 'ScriptListCtrl'
+    })
+
     .when('/scripts/edit/:id', {
         templateUrl : '/static/js/pages/script_edit.html',
         controller  : 'ScriptEditCtrl'
