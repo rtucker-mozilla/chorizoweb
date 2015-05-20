@@ -242,6 +242,7 @@ def parse_message(msg, channel):
     action = str(json_obj['Command'])
     if action == 'pong':
         ping_hash = str(json_obj['Hash'])
+        logging.info(ping_hash)
         async_pong(hostname, ping_hash, app.config)
     elif action == "start_update_resp":
         start_update_success = start_update(host)
