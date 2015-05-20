@@ -18,6 +18,7 @@ from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, Syst
 from moz_au_web.database import db
 from celery_tasks import async_pong
 import logging
+logging.setLevel(2)
 LOG_FORMAT = (
     '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
     '\t%(message)s'
