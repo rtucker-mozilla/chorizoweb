@@ -63,7 +63,6 @@ def async_ping(system, config):
     rabbit_channel = init_rabbitmq(config)
     ping_hash = system.ping(rabbit_channel)
     current_app.logger.info("async_ping ping_hash: %s" % (ping_hash))
-    db.session.remove()
 
 @celery.task()
 def async_pong(hostname, ping_hash, config):
