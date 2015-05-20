@@ -410,6 +410,7 @@ def scriptdetail(id):
     s_obj['id'] = s.id
     s_obj['file_name'] = s.file_name
     s_obj['description'] = s.description
+    s_obj['script_exit_code_reboot'] = s.script_exit_code_reboot
     return jsonify({
         'total_count': 1,
         'limit': 0,
@@ -423,6 +424,7 @@ def scriptedit(id):
     json_data = request.get_json()
     s.file_name = json_data['file_name']
     s.description = json_data['description']
+    s.script_exit_code_reboot = json_data['script_exit_code_reboot']
     try:
         s.save()
     except IntegrityError:

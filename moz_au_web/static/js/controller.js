@@ -125,10 +125,12 @@ mozAUApp.directive('delaySearch', function ($timeout) {
 
 
 mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $interval, $routeParams) {
-    $scope.debug = false;
+    $scope.debug = true;
+    $scope.script_exit_code_reboot = ''
     $scope.id = $routeParams['id'];
     $scope.file_name = ''
     $scope.description = ''
+    log('here');
 
     function log(message){
         if($scope.debug && console){
@@ -151,6 +153,7 @@ mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $inter
         data = {};
         data['file_name'] = $scope.file_name;
         data['description'] = $scope.description;
+        data['script_exit_code_reboot'] = $scope.script_exit_code_reboot;
         $http({
             withCredentials: false,
             method: 'post',
@@ -164,6 +167,7 @@ mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $inter
         });
         log("$scope.filename: " + $scope.file_name);
         log("$scope.description: " + $scope.description);
+        log("$scope.script_exit_code_reboot: " + $scope.script_exit_code_reboot);
     }
 
 
@@ -171,6 +175,7 @@ mozAUApp.controller('ScriptEditCtrl', function ($scope, $location, $http, $inter
         $http.get('/api/scriptdetail/' + $scope.id + '/').success(function(data){
             $scope.file_name = data.script.file_name;
             $scope.description = data.script.description;
+            $scope.script_exit_code_reboot = data.script.script_exit_code_reboot;
             log($scope.scripts);
         });
 

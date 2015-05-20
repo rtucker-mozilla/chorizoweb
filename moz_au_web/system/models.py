@@ -211,6 +211,7 @@ class ScriptAvailable(SurrogatePK, Model):
     file_name = Column(db.String(80), unique=True, nullable=False)
     description = Column(db.Text, unique=False, nullable=False)
     created_at = Column(db.DateTime, default=dt.datetime.utcnow)
+    script_exit_code_reboot = Column(db.BigInteger, default=128)
     """
         is_available
         0 = Disabled
