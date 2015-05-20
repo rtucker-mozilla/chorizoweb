@@ -17,9 +17,15 @@ from moz_au_web.settings import ProdConfig, DevConfig
 from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, SystemPing
 from moz_au_web.database import db
 from celery_tasks import async_pong
-from flask import current_app
 import logging
+LOG_FORMAT = (
+    '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
+    '\t%(message)s'
+    )
+logging.basicConfig(format=LOG_FORMAT)
+
 logging.info("Loaded")
+print "Loaded with print statement"
 
 ENV = os.environ.get('ENV', False)
 if ENV == 'DEV':
