@@ -61,11 +61,14 @@ celery = make_celery()
 
 @celery.task()
 def async_ping(system, config):
+    log.info("async_ping system: %s" % (system))
     rabbit_channel = init_rabbitmq(config)
     system.ping(rabbit_channel)
 
 @celery.task()
 def async_pong(hostname, ping_hash, config):
+    log.info("async_pong hostname: %s" % (hostname))
+    log.info("async_pong ping_hash: %s" % (ping_hash))
     db.session.commit()
     db.session.close()
     sp = SystemPing.query.filter_by(ping_hash=ping_hash).first()
