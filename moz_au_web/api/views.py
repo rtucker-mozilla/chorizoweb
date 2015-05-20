@@ -47,7 +47,6 @@ def system():
     for s in systems:
         s_dict = {}
         s_dict['hostname'] = s.hostname
-        s_dict['cronfile'] = s.cronfile
         s_dict['created_at'] = s.created_at
         s_dict['id'] = s.id
         ret.append(s_dict)
@@ -163,6 +162,12 @@ def read_system(id):
     s_dict['hostname'] = system.hostname
     s_dict['cronfile'] = system.cronfile
     s_dict['created_at'] = system.created_at
+    s_dict['groups'] = []
+    for g in system.updategroups:
+        s_dict['groups'].append({
+            'id': g.id,
+            'group_name': g.group_name,
+            })
     s_dict['pings'] = []
     counter = 0
     ping_limit = 5

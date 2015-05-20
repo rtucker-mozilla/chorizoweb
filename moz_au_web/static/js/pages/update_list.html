@@ -4,7 +4,12 @@
 </ul>
 <div>
     <dt>Hostname: <dd>{{ system.hostname }}</dd></dt>
-    <dt>Manage Scripts: <dd><a href="#scripts/{{ system.hostname }}">Manage Run Scripts</a></dd></dt>
+    <div ng-if="system.groups.length > 0">
+        <dt>Groups
+            <dd ng-repeat="group in system.groups"><a href="#/groups/detail/{{ group.id}}/">{{ group.group_name }}</a>
+        </dt>
+    </div>
+
 </div>
 <div style="margin-top: 5px;">
     <button class='btn btn-primary' ng-click="ping()">Ping Host</button>

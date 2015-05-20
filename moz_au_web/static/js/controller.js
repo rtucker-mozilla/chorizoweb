@@ -337,6 +337,7 @@ mozAUApp.controller('UpdateListCtrl', function ($scope, $http, $routeParams, $in
         });
         $http.get('/api/system/' + $scope.hostname + '/').success(function(data){
             $scope.system = data.system;
+            log($scope.system);
             $scope.pings = data.system.pings;
             log($scope.pings);
         });
