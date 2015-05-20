@@ -32,7 +32,7 @@
     <tbody>
     <tr ng-repeat="ping in pings">
         <td>{{ ping.id }}</td>
-        <td>{{ ping.success }}</td>
+        <td>{% if ping.success == 1 %}True{% else %}False{% endif %}</td>
         <td>{{ ping.ping_time }}</td>
         <td>{{ ping.pong_time }}</td>
     </tr>
