@@ -111,10 +111,22 @@ class SystemPing(SurrogatePK, Model):
     ping_hash = Column(db.String(80), unique=True, nullable=False)
     ping_time = Column(db.DateTime)
 
+    @property
+    def success(self):
+        return len(SystemPong.query.filter_by(ping_hash=self.ping_hash).first()) == 1
+
+    @property
+    def pong_time(self):
+        try:
+            return SystemPong.query.filter_by(ping_hash=self.ping_hash).first().pong_time
+        except:
+            return ''
+
 class SystemPong(SurrogatePK, Model):
     __tablename__ = 'system_pongs'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
     system = relationship("System", foreign_keys=[system_id], backref="pings")
+    ping_hash = Column(db.String(80), unique=True, nullable=False)
     pong_time = Column(db.DateTime)
 
 update_groups = db.Table('update_groups',

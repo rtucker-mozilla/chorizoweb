@@ -4,7 +4,7 @@ from flask import Flask, current_app
 import pika
 from moz_au_web.settings import ProdConfig, DevConfig
 from moz_au_web.extensions import db
-from moz_au_web.system.models import System, SystemPing
+from moz_au_web.system.models import System, SystemPing, SystemPong
 import datetime
 ENV = os.environ.get('ENV', False)
 if ENV == 'DEV':
@@ -69,16 +69,15 @@ def async_ping(system, config):
 def async_pong(hostname, ping_hash, config):
     current_app.logger.info("async_pong hostname: %s" % (hostname))
     current_app.logger.info("async_pong ping_hash: %s" % (ping_hash))
-    db.session.remove()
-    sp = SystemPing.query.filter_by(ping_hash=ping_hash).first()
-    if not sp is None:
+    system = System.get_by_hostname(hostname)
+    if system:
         current_app.logger.info("We have system ping object ping_hash: %s" % (ping_hash))
+        sp = SystemPong()
+        sp.ping_hash = ping_hash
         sp.pong_time = datetime.datetime.now()
-        sp.success = True
         sp.save()
     else:
-        current_app.logger.info("We do not have system ping object ping_hash: %s" % (ping_hash))
-    db.session.remove()
+        current_app.logger.info("No system found by hostname: %s" % (hostname))
 
 @celery.task()
 def async_group_start_update(group, config):
