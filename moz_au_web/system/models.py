@@ -125,7 +125,7 @@ class SystemPing(SurrogatePK, Model):
 class SystemPong(SurrogatePK, Model):
     __tablename__ = 'system_pongs'
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
-    system = relationship("System", foreign_keys=[system_id], backref="pings")
+    system = relationship("System", foreign_keys=[system_id], backref="pongs")
     ping_hash = Column(db.String(80), unique=True, nullable=False)
     pong_time = Column(db.DateTime)
 
