@@ -14,6 +14,7 @@ else:
 
 from celery.utils.log import get_task_logger
 log = get_task_logger(__name__)
+log.info("loaded")
 
 def init_rabbitmq(config):
     rabbitmq_host = config['RABBITMQ_HOST']
