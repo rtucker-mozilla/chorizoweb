@@ -83,6 +83,7 @@ class System(SurrogatePK, Model):
             return sp.ping_hash
         except Exception ,e:
             print e
+        db.session.remove()
 
         return False
 
