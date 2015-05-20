@@ -1,6 +1,6 @@
 from celery import Celery
 import os
-from flask import Flask
+from flask import Flask, current_app
 import pika
 from moz_au_web.settings import ProdConfig, DevConfig
 from moz_au_web.extensions import db
@@ -14,14 +14,14 @@ else:
 
 from celery.utils.log import get_task_logger
 log = get_task_logger(__name__)
-log.info("loaded")
+
 
 def init_rabbitmq(config):
     rabbitmq_host = config['RABBITMQ_HOST']
     rabbitmq_port = config['RABBITMQ_PORT']
     rabbitmq_user = config['RABBITMQ_USER']
     rabbitmq_pass = config['RABBITMQ_PASS']
-    log.info("init_rabbitmq: rabbitmq_host" % (rabbitmq_host))
+    current_app.logger.info("init_rabbitmq: rabbitmq_host %s" % (rabbitmq_host))
     rabbitmq_exchange = config['RABBITMQ_EXCHANGE']
     queue = 'action'
     routing_key = 'action.host'
@@ -62,6 +62,7 @@ celery = make_celery()
 @celery.task()
 def async_ping(system, config):
     log.info("async_ping system: %s" % (system))
+    print 'here'
     rabbit_channel = init_rabbitmq(config)
     system.ping(rabbit_channel)
 
