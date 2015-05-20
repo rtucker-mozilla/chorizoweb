@@ -86,7 +86,7 @@ def action_watcher(client):
 
     def callback(arg1, arg2):
         msg = arg2
-        print "msg: %s" % (msg)
+        logging.info("action_watcher: msg: %s" % (msg))
         client.basic_ack(msg)
 
     def parse_action(msg):
