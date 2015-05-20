@@ -18,14 +18,15 @@ from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, Syst
 from moz_au_web.database import db
 from celery_tasks import async_pong
 from flask import current_app
-current_app.logger.info("Loaded")
+import logging
+logging.info("Loaded")
 
 ENV = os.environ.get('ENV', False)
 if ENV == 'DEV':
     config_object = DevConfig
 else:
     config_object = ProdConfig
-current_app.logger.info("config_object: %s" % (config_object))
+logging.info("config_object: %s" % (config_object))
 
 
 app = create_app(config_object)
