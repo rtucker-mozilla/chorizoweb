@@ -12,6 +12,7 @@ if ENV == 'DEV':
 else:
     config_object = ProdConfig
 
+from celery.utils.log import get_task_logger
 
 def init_rabbitmq(config):
     rabbitmq_host = config['RABBITMQ_HOST']
@@ -58,15 +59,15 @@ celery = make_celery()
 
 @celery.task()
 def async_ping(system, config):
-    log.info("async_ping system: %s" % (system))
+    current_app.logger.info("async_ping system: %s" % (system))
     print 'here'
     rabbit_channel = init_rabbitmq(config)
     system.ping(rabbit_channel)
 
 @celery.task()
 def async_pong(hostname, ping_hash, config):
-    log.info("async_pong hostname: %s" % (hostname))
-    log.info("async_pong ping_hash: %s" % (ping_hash))
+    current_app.logger.info("async_pong hostname: %s" % (hostname))
+    current_app.logger.info("async_pong ping_hash: %s" % (ping_hash))
     db.session.commit()
     db.session.close()
     sp = SystemPing.query.filter_by(ping_hash=ping_hash).first()
