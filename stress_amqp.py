@@ -24,7 +24,7 @@ LOG_FORMAT = (
     )
 logging.basicConfig(format=LOG_FORMAT)
 
-logging.info("Loaded")
+logging.error("Loaded")
 print "Loaded with print statement"
 
 ENV = os.environ.get('ENV', False)
