@@ -4,6 +4,10 @@
             <span>Group Detail: {{ group.group_name }}</span>
         </h1>
         <hr/>
+        <span>
+            <button ng-click="updateAllGroupHosts()" class='btn btn-primary btn-small'>Update All Group Hosts</button>
+        </span>
+        <div class="flash-message" flash-message="5000" ></div>
     </div>
     <div class="row">
         <div>

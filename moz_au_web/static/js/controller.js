@@ -424,7 +424,7 @@ mozAUApp.controller('GroupListCtrl', function ($scope, $http, $interval) {
 
 });
 
-mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $routeParams) {
+mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $routeParams, Flash) {
     $scope.id = $routeParams['id'];
     $scope.has_loaded = false;
     $scope.debug = true;
@@ -440,6 +440,12 @@ mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $rout
         $http.get('/api/start_system_update_with_group/' + system_id + '/' + $scope.id + '/').success(function(data){
             log('start_system_update_with_group called');
         });
+    }
+
+    $scope.updateAllGroupHosts = function(){
+        log("updateAllGroupHosts called");
+        var message = "Updating All Hosts in Group";
+        Flash.create('success', message);
     }
 
     function get_group(){
