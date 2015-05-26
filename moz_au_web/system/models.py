@@ -103,7 +103,8 @@ class System(SurrogatePK, Model):
         start_update_obj = self.mq_default_args()
         start_update_obj['command'] = 'start_update'
         start_update_obj['groupid'] = int(group_id)
-        logging.info("start_update_obj: %s" % (start_update_obj))
+        logging.info("start_update_obj: %s" % (json.dumps(start_update_obj)))
+        logging.info("routing_key: %s" % (routing_key))
 
         res = channel.basic_publish(
             exchange='chorizo',

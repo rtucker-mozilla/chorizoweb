@@ -275,6 +275,8 @@ def parse_message(msg, channel):
             group_name = update_group.group_name
             running_group_updates[group_name] = {}
             running_group_updates[group_name][hostname] = {}
+        else:
+            logging.info("group not found by id: %s" % (json_obj['GroupId']))
 
         if update_group:
             running_group_updates[group_name][hostname]['scripts_to_run'] = [s.script.file_name for s in update_group.scripts]
