@@ -110,11 +110,23 @@ def get_group(id):
         r_group['id'] = group.id
         r_group['group_name'] = group.group_name
         r_group['update_systems'] = []
+        r_group['recent_updates'] = []
         for system in group.systems:
             tmp = {}
             tmp['id'] = system.id
             tmp['hostname'] = system.hostname
             r_group['update_systems'].append(tmp)
+        for update in group.recent_updates:
+            tmp = {}
+            tmp['id'] = update.id
+            tmp['created_at'] = update.created_at.strftime("%Y-%m-%d %H:%I:%S")
+            try:
+                tmp['finished_at'] = update.finished_at.strftime("%Y-%m-%d %H:%I:%S")
+            except AttributeError:
+                tmp['finished_at'] = ''
+            tmp['status_code'] = update.status_code
+            r_group['recent_updates'].append(tmp)
+        r_group['recent_updates'] = r_group['recent_updates'][::-1]
         total_count = 1
     else:
         r_group = None
@@ -242,13 +254,29 @@ def ping(system_id):
         print "Could not find system"
     return make_response(jsonify({'success': 'success'}), 200)
 
+@blueprint.route("/start_system_update_with_group/<system_id>/<group_id>/", methods=["GET"])
+def start_system_update_with_group(system_id, group_id):
+    system = System.get_by_id(system_id)
+    if system is None:
+        system = System.get_by_hostname(system_id)
+    if system is None:
+        return make_response(jsonify({'error': 'Could not find host'}), 500)
+    update_group = UpdateGroup.get_by_id(group_id)
+    if update_group is None:
+        return make_response(jsonify({'error': 'Could not find update_group'}), 500)
+    if not system is None and not update_group is None:
+        res = async_system_start_update.delay(system, current_app.config, group_id=group_id)
+        return make_response(jsonify({'success': 'success'}), 200)
+    else:
+        return make_response(jsonify({'success': 'Could not find host'}), 500)
+
 @blueprint.route("/start_system_update/<system_id>/", methods=["GET"])
-def start_system_update(system_id):
+def start_system_update(system_id, group_id):
     system = System.get_by_id(system_id)
     if system is None:
         system = System.get_by_hostname(system_id)
     if not system is None:
-        res = async_system_start_update.delay(system, current_app.config)
+        res = async_system_start_update.delay(system, current_app.config, group_id=group_id)
         return make_response(jsonify({'success': 'success'}), 200)
     else:
         return make_response(jsonify({'success': 'Could not find host'}), 500)

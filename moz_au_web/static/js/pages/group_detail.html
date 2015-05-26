@@ -1,8 +1,7 @@
 <div  ng-init="init()" ng-controller="GroupDetailCtrl" class="col-md-6">
     <div class="row">
         <h1>
-            <span>Group Detail</span>
-            <button class='btn btn-primary pull-right' onclick="location.href='/#/groups/create/';">Create Group</button>
+            <span>Group Detail: {{ group.group_name }}</span>
         </h1>
         <hr/>
     </div>
@@ -12,12 +11,17 @@
             <table style="margin-top: 55px;" ng-if="group != none" class="table table-bordered table-striped">
                 <thead>
                 <tr>
-                    <th>Hosts in Group&nbsp; <button ng-click="editGroupHosts()" class='btn btn-primary btn-small pull-right'>Edit Group Hosts</button></th>
+                    <th colspan="2">Hosts in Group&nbsp; <button ng-click="editGroupHosts()" class='btn btn-primary btn-small pull-right'>Edit Group Hosts</button></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr ng-repeat="system in group.update_systems | filter:query">
-                    <td colspan="2"><a href="#detail/{{ system.id }}/">{{ system.hostname }}</a></td>
+                    <td>
+                        <a href="#detail/{{ system.id }}/">{{ system.hostname }}</a>
+                    </td>
+                    <td>
+                        <button ng-click="updateHost(system.id)" class='btn btn-primary btn-small pull-right'>Update Host with Group Policy</button>
+                    </td>
                 </tr>
                 </tbody>
                 <tfoot></tfoot>
@@ -36,6 +40,36 @@
                 <tbody>
                 <tr ng-repeat="script in scripts | filter:query">
                 <td> {{ script.file_name }} </td>
+                </tr>
+                </tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <h3>Recent Updates</h3>
+            <table style="margin-top: 55px;" ng-if="group != none" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>Update ID</th>
+                    <th>Start Time</th>
+                    <th>Finish Time</th>
+                    <th>Status</th>
+                    <th>Update ID</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="update in group.recent_updates">
+                <td> <a href="/#/updatedetail/{{ update.id }}/">{{ update.id }}</a> </td>
+                    <td> {{ update.created_at }} </td>
+                    <td> {{ update.finished_at }} </td>
+                    <td>
+                        <span ng-if="update.status_code == 0">Completed</span>
+                        <span ng-if="update.status_code == 1">Warning</span>
+                        <span ng-if="update.status_code == 2">Failed</span>
+                    </td>
+                    <td> {{ update.id }} </td>
                 </tr>
                 </tbody>
                 <tfoot></tfoot>

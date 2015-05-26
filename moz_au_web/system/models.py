@@ -14,6 +14,12 @@ from moz_au_web.database import (
     relationship,
     SurrogatePK,
 )
+import logging
+LOG_FORMAT = (
+    '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
+    '\t%(message)s'
+    )
+logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
 
 
 class System(SurrogatePK, Model):
@@ -89,12 +95,15 @@ class System(SurrogatePK, Model):
 
 
 
-    def start_update(self, channel):
+    def start_update(self, channel, group_id=None):
+        # Injection point for a system to start updating
         queue = self.get_queue_name_from_hostname()
         routing_key = self.get_routing_key()
         current_ms = str(time.time())
         start_update_obj = self.mq_default_args()
         start_update_obj['command'] = 'start_update'
+        start_update_obj['groupid'] = int(group_id)
+        logging.info("start_update_obj: %s" % (start_update_obj))
 
         res = channel.basic_publish(
             exchange='chorizo',
@@ -161,19 +170,20 @@ class UpdateGroup(SurrogatePK, Model):
     def get_master_routing_key(self):
         return "master.action"
 
-    def start_update(self, channel):
-        for host in self.systems:
-            queue = self.get_queue_name_from_hostname(host.hostname)
-            routing_key = self.get_routing_key(hostname)
-            current_ms = str(time.time())
-            start_update_obj = self.mq_default_args()
-            start_update_obj['command'] = 'start_update'
+    def start_update(self, channel, concurrent=False):
+        if concurrent == True:
+            for host in self.systems:
+                queue = self.get_queue_name_from_hostname(host.hostname)
+                routing_key = self.get_routing_key(hostname)
+                current_ms = str(time.time())
+                start_update_obj = self.mq_default_args()
+                start_update_obj['command'] = 'start_update'
 
-            res = channel.basic_publish(
-                exchange='chorizo',
-                routing_key = routing_key,
-                body=json.dumps(start_update_obj)
-            )
+                res = channel.basic_publish(
+                    exchange='chorizo',
+                    routing_key = routing_key,
+                    body=json.dumps(start_update_obj)
+                )
 
 
 class SystemUpdate(SurrogatePK, Model):
@@ -181,6 +191,9 @@ class SystemUpdate(SurrogatePK, Model):
     system_id = Column(db.Integer, db.ForeignKey('systems.id'))
     system = relationship("System", foreign_keys=[system_id], backref="updates")
     created_at = Column(db.DateTime, default=dt.datetime.utcnow())
+    finished_at = Column(db.DateTime)
+    group_id = Column(db.Integer, db.ForeignKey('update_group.id'))
+    group = relationship("UpdateGroup", foreign_keys=[group_id], backref="recent_updates")
     """
         is_current
         0 = Completed

@@ -434,6 +434,14 @@ mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $rout
         }
     }
 
+    $scope.updateHost = function(system_id){
+        log("system_id: " + system_id);
+        log("group_id: " + $scope.id);
+        $http.get('/api/start_system_update_with_group/' + system_id + '/' + $scope.id + '/').success(function(data){
+            log('start_system_update_with_group called');
+        });
+    }
+
     function get_group(){
         $http.get('/api/groups/' + $scope.id + '/').success(function(data){
             $scope.group = data.group;

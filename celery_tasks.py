@@ -84,6 +84,6 @@ def async_group_start_update(group, config):
     group.start_update(channel)
 
 @celery.task()
-def async_system_start_update(system, config):
+def async_system_start_update(system, config, group_id=None):
     channel = init_rabbitmq(config)
-    system.start_update(channel)
+    system.start_update(channel, group_id=group_id)

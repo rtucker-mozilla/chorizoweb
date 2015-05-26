@@ -14,18 +14,11 @@ from flask.ext.script import Manager
 from moz_au_web.app import create_app
 from threading import Thread
 from moz_au_web.settings import ProdConfig, DevConfig
-from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, SystemPing
+from moz_au_web.system.models import System, SystemUpdate, SystemUpdateLog, SystemPing, UpdateGroup
 from moz_au_web.database import db
 from celery_tasks import async_pong
 import logging
-LOG_FORMAT = (
-    '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
-    '\t%(message)s'
-    )
-logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
 
-logging.error("Loaded")
-print "Loaded with print statement"
 
 ENV = os.environ.get('ENV', False)
 if ENV == 'DEV':
@@ -40,7 +33,6 @@ app = create_app(config_object)
 manager = Manager(app)
 
 AMQP_URL = app.config.get("AMQP_URL", "amqp://127.0.0.1:5671/")
-print AMQP_URL
 EXCHANGE='chorizo'
 QUEUE_CNT = 32
 BURST_SIZE = 120
@@ -49,7 +41,7 @@ BODY_SIZE = 1
 PREFETCH_CNT = 1
 MSG_HEADERS = {'persistent': False}
 PUBACKS = False
-running_updates = {}
+running_group_updates = {}
 
 counter = 0
 counter_t0 = time.time()
@@ -82,6 +74,7 @@ def puka_async_generator(method):
 def action_watcher(client):
     # consume a queue for actions injected
     master_q = "action"
+    logging.info("action_watcher: declaring queue: %s" % master_q)
     client.queue_declare(queue=master_q, durable=True)
 
     def callback(arg1, arg2):
@@ -90,6 +83,7 @@ def action_watcher(client):
         client.basic_ack(msg)
 
     def parse_action(msg):
+        logging.info("action_water.parse_info")
         try:
             json_obj = json.loads(msg['body'])
         except ValueError:
@@ -127,17 +121,18 @@ def action_watcher(client):
             pass
 
     def start_update(json_obj):
+        # Send the message to the client system that it should start to update
         ping_obj = {}
         ping_obj['hash'] = str(json_obj['hash'])
         ping_obj['command'] = 'start_update'
-        ping_obj['args'] = []
+        ping_obj['args'] = json_obj['args']
+        ping_obj['groupid'] = json_obj['groupid']
         ping_obj['timestamp'] = str(json_obj['timestamp'])
         try:
             routing_key = "%s.host" % json_obj['host']
         except KeyError:
             client.basic_ack(msg)
             return
-        print routing_key
         client.basic_ack(msg)
         try:
             client.basic_publish(
@@ -154,19 +149,29 @@ def action_watcher(client):
         msg = (yield consume_promise)
         parse_action(msg)
 
-def finish_update(current_update):
+def finish_update(current_update, group_id=None):
     update_log = SystemUpdateLog()
     update_log.system_update_id = current_update.id
     update_log.log_text = "Update Finished"
     update_log.system_id = current_update.system.id
     update_log.return_code = 0
     update_log.created_at = datetime.datetime.utcnow()
+    if not group_id is None:
+        update_log.group_id = group_id
+    current_update.finished_at = datetime.datetime.utcnow()
     update_log.save()
+    current_update.finished_at = datetime.datetime.utcnow()
     current_update.is_current = False
     current_update.save()
 
-def add_system_update_log(system, log_text, return_code):
-    new_update = SystemUpdate(system_id=system.id, is_current=True, created_at=datetime.datetime.utcnow()).save()
+def add_system_update_log(system, log_text, return_code, group_id=None):
+    new_update = SystemUpdate(
+        system_id=system.id,
+        is_current=True,
+        group_id=group_id,
+        created_at=datetime.datetime.utcnow()
+    )
+    new_update.save()
     update_log = SystemUpdateLog()
     update_log.system_update_id = new_update.id
     update_log.log_text = log_text
@@ -175,38 +180,46 @@ def add_system_update_log(system, log_text, return_code):
     update_log.created_at = datetime.datetime.utcnow()
     update_log.save()
 
-def start_update(system):
+def start_update_log(system, group_id=None):
     current_update = SystemUpdate.query.filter_by(system_id=system.id).filter_by(is_current=True).order_by('-id').first()
     if current_update:
         finish_update(current_update)
-    add_system_update_log(system, 'Update Started', 0)
+    add_system_update_log(system, 'Update Started', 0, group_id=group_id)
     return True
 
-def run_updates(channel):
-    global running_updates
-    for dict_host in running_updates.iterkeys():
-        try:
-            script_to_run = running_updates[dict_host]['scripts_to_run'][0]
-        except (KeyError, IndexError):
-            script_to_run = None
+def run_updates(channel, update_group):
+    global running_group_updates
 
-        try:
-            host = System.get_by_hostname(dict_host)
-        except:
-            host = None
+    if not update_group is None:
+        group_name = update_group.group_name
+        for dict_host in running_group_updates[group_name].iterkeys():
+            try:
+                script_to_run = running_group_updates[group_name][dict_host]['scripts_to_run'][0]
+            except (KeyError, IndexError):
+                script_to_run = None
 
-        if script_to_run and host:
-            execute(channel, host, script_to_run)
-        elif not script_to_run and host:
-            pass
+            try:
+                host = System.get_by_hostname(dict_host)
+            except:
+                host = None
 
-def execute(channel, host, script_to_run):
+            if script_to_run and host:
+                execute(channel, host, script_to_run, group_id=update_group.id)
+            elif not script_to_run and host:
+                pass
+
+def execute(channel, host, script_to_run, group_id=None):
     current_ms = str(time.time())
     exec_obj = {}
     exec_obj['command'] = "exec"
     exec_obj['args'] = [script_to_run]
     exec_obj['hash'] = hashlib.sha1(current_ms).hexdigest()
     exec_obj['timestamp'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%s")
+    if not group_id is None:
+        exec_obj['groupid'] = group_id
+    else:
+        exec_obj['group_id'] = ""
+    print exec_obj
     channel.basic_publish(
         exchange='chorizo',
         routing_key=host.get_routing_key(),
@@ -232,7 +245,8 @@ def logcapture(log_obj, host):
     s.save()
 
 def parse_message(msg, channel):
-    global running_updates
+    # These are incoming messages from the client/agent machines
+    global running_group_updates
     try:
         json_obj = json.loads(msg['body'])
     except:
@@ -245,12 +259,31 @@ def parse_message(msg, channel):
         logging.info(ping_hash)
         async_pong(hostname, ping_hash, app.config)
     elif action == "start_update_resp":
-        start_update_success = start_update(host)
         hostname = host.hostname
-        running_updates[hostname] = {}
-        running_updates[hostname]['scripts_to_run'] = [s.script.file_name for s in host.updategroups[0].scripts]
-        running_updates[hostname]['scripts_ran'] = []
-        run_updates(channel)
+        try:
+            update_group = UpdateGroup.get_by_id(json_obj['GroupId'])
+        except:
+            # No group_id in Args
+            # Use the 1st group
+            update_group = None
+        try:
+            start_update_success = start_update_log(host, update_group.id)
+        except:
+            return
+        group_name = None
+        if not update_group is None:
+            group_name = update_group.group_name
+            running_group_updates[group_name] = {}
+            running_group_updates[group_name][hostname] = {}
+
+        if update_group:
+            running_group_updates[group_name][hostname]['scripts_to_run'] = [s.script.file_name for s in update_group.scripts]
+            if not hostname in running_group_updates[group_name]:
+                running_group_updates[group_name][hostname] = {}
+            running_group_updates[group_name][hostname]['scripts_to_run'] = [s.script.file_name for s in update_group.scripts]
+            running_group_updates[group_name][hostname]['scripts_ran'] = []
+
+        run_updates(channel, update_group)
     elif action == "exec_response":
         # Get the currently executed script
         # Log the response
@@ -265,19 +298,31 @@ def parse_message(msg, channel):
         hostname = json_obj['Hostname']
         script_ran = json_obj['Args'][0]
         try:
-            len_scripts_to_run = len(running_updates[hostname]['scripts_to_run'])
+            group_id = json_obj['GroupId']
+            if group_id == "":
+                group_id = None
+        except KeyError:
+            group_id = None
+        update_group = UpdateGroup.get_by_id(group_id)
+        if not update_group is None:
+            group_name = update_group.group_name
+        elif update_group is None:
+            return
+        try:
+            len_scripts_to_run = len(running_group_updates[group_name][hostname]['scripts_to_run'])
         except (KeyError):
             # Somehow got into a weird race condition where there is no local running_updates
             return
-        if running_updates[hostname]['scripts_to_run'][0] == script_ran:
-            del running_updates[hostname]['scripts_to_run'][0]
-            running_updates[hostname]['scripts_ran'].append(script_ran)
+
+        if running_group_updates[group_name][hostname]['scripts_to_run'][0] == script_ran:
+            del running_group_updates[group_name][hostname]['scripts_to_run'][0]
+            running_group_updates[group_name][hostname]['scripts_ran'].append(script_ran)
             logcapture(json_obj, host)
-            if len(running_updates[hostname]['scripts_to_run']) > 0:
-                run_updates(channel)
+            if len(running_group_updates[group_name][hostname]['scripts_to_run']) > 0:
+                run_updates(channel, update_group)
             else:
                 current_update = SystemUpdate.query.filter_by(system_id=host.id).order_by('-id').first()
-                finish_update(current_update)
+                finish_update(current_update, group_id)
 
 @puka_async_generator
 def worker(client, q):
