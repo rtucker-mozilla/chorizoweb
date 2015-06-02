@@ -444,8 +444,19 @@ mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $rout
 
     $scope.updateAllGroupHosts = function(){
         log("updateAllGroupHosts called");
-        var message = "Updating All Hosts in Group";
-        Flash.create('success', message);
+        $http({
+            withCredentials: false,
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            url: '/api/start_update/' + $scope.id + '/'
+        }).success(function(data){
+            var message = "Updating All Hosts in Group";
+            Flash.create('success', message);
+        }).error(function(data){
+            log(data);
+            var message = "Error: Unable to update hosts.";
+            Flash.create('danger', message);
+        });
     }
 
     function get_group(){

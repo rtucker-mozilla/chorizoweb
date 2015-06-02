@@ -171,6 +171,15 @@ class UpdateGroup(SurrogatePK, Model):
     def get_master_routing_key(self):
         return "master.action"
 
+    def mq_default_args(self):
+        current_ms = str(time.time())
+        hash_string = "%s%s" % (self.group_name, current_ms)
+        ret_obj = {}
+        ret_obj['hash'] = hashlib.sha1(hash_string).hexdigest()
+        ret_obj['args'] = []
+        ret_obj['timestamp'] = dt.datetime.now().strftime("%Y-%m-%d %H:%I:%s")
+        return ret_obj
+
     def start_update(self, channel, concurrent=False):
         if concurrent == True:
             for host in self.systems:
@@ -185,6 +194,19 @@ class UpdateGroup(SurrogatePK, Model):
                     routing_key = routing_key,
                     body=json.dumps(start_update_obj)
                 )
+        else:
+            queue = 'action'
+            routing_key = 'action.host'
+            current_ms = str(time.time())
+            start_update_obj = self.mq_default_args()
+            start_update_obj['command'] = 'start_group_update'
+            start_update_obj['group_id'] = self.id
+
+            res = channel.basic_publish(
+                exchange='chorizo',
+                routing_key = routing_key,
+                body=json.dumps(start_update_obj)
+            )
 
 
 class SystemUpdate(SurrogatePK, Model):

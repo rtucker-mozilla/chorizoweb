@@ -281,11 +281,11 @@ def start_system_update(system_id, group_id):
     else:
         return make_response(jsonify({'success': 'Could not find host'}), 500)
 
-@blueprint.route("/start_update/<group_id>/", methods=["GET"])
+@blueprint.route("/start_update/<group_id>/", methods=["GET", "POST"])
 def start_update(group_id):
     group = UpdateGroup.get_by_id(group_id)
     if not group is None:
-        res = async_start_update.delay(group, current_app.config)
+        res = async_group_start_update.delay(group, current_app.config)
     return make_response(jsonify({'success': 'success'}), 200)
 
 
