@@ -309,7 +309,7 @@ def parse_message(msg, channel):
         if cqs.check_if_host_done(hostname, group_name):
             current_update = SystemUpdate.query.filter_by(system_id=host.id).order_by('-id').first()
             finish_update(current_update, group_id)
-            if cqs.check_group_complete(group_name) is False:
+            if cqs.check_if_group_done(group_name) is False:
                 next_host = cqs.get_next_host_by_group(group_name)
                 host = System.get_by_hostname(next_host)
                 host.start_update(group_id = group_id)
