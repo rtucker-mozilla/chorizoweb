@@ -29,7 +29,7 @@ class ChorizoQueueState(object):
     def add_script_to_host_group(self, script_name, host_name, group):
         group_name = group.group_name
         self.add_group_if_not_exists(group_name)
-        self.add_host_to_group_if_not_exists(group_name, host_name)
+        self.add_host_to_group_if_not_exists(group, host_name)
         self.running_group_updates[group_name][host_name]['scripts_to_run'].append(script_name)
 
     def set_script_ran(self, script_name, host_name, group_name):
