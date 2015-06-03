@@ -279,7 +279,7 @@ def parse_message(msg, channel):
 
         if update_group:
             for s in update_group.scripts:
-                cqs.add_script_to_host_group(s.script.file_name, hostname, group_name)
+                cqs.add_script_to_host_group(s.script.file_name, hostname, update_group)
 
         run_updates(channel, update_group)
     elif action == "exec_response":
