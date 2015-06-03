@@ -13,13 +13,17 @@ class ChorizoQueueState(object):
         if not self.has_group(group_name):
             self.add_group(group_name)
 
-    def add_host_to_group_if_not_exists(self, group_name, host_name):
+    def add_host_to_group_if_not_exists(self, group, host_name, add_scripts=False):
+        group_name = group.group_name
         self.add_group_if_not_exists(group_name)
         if not host_name in self.running_group_updates[group_name]:
             self.running_group_updates[group_name][host_name] = {}
             self.running_group_updates[group_name][host_name]['scripts_to_run'] = []
             self.running_group_updates[group_name][host_name]['scripts_ran'] = []
             self.running_group_updates[group_name][host_name]['order'] = len(self.running_group_updates[group_name]) - 1
+            if add_scripts is True:
+                for s in group.scripts:
+                    self.running_group_updates[group_name][host_name]['scripts_to_run'].append(s.script.file_name)
 
 
     def add_script_to_host_group(self, script_name, host_name, group_name):

@@ -137,7 +137,7 @@ def action_watcher(client):
         cqs.add_group_if_not_exists(group_name)
         if len(group.systems) > 0:
             for system in group.systems:
-                cqs.add_host_to_group_if_not_exists(group_name, system.hostname)
+                cqs.add_host_to_group_if_not_exists(group, system.hostname, add_scripts=True)
         run_updates(client, group)
 
     consume_promise = client.basic_consume(queue=master_q)
@@ -192,13 +192,15 @@ def run_updates(channel, update_group):
         host, script_to_run = cqs.get_next_script_to_run(group_name)
         if script_to_run and host:
             execute(channel, host, script_to_run, group_id=update_group.id)
-            cqs.set_script_ran(script_to_run, host, group_name)
-    if update_group in running_group_updates and len(running_group_updates[update_group.group_name]) == 0:
-        del running_group_updates[update_group.group_name]
+            #cqs.set_script_ran(script_to_run, host, group_name)
+    #if update_group in running_group_updates and len(running_group_updates[update_group.group_name]) == 0:
+    #    del running_group_updates[update_group.group_name]
 
 def execute(channel, host, script_to_run, group_id=None):
     if not hasattr(host, 'get_routing_key'):
         host = System.query.filter_by(hostname=host).first()
+    if not get_current_system_update(host):
+        start_update_log(host, group_id)
     current_ms = str(time.time())
     exec_obj = {}
     exec_obj['command'] = "exec"
@@ -214,6 +216,12 @@ def execute(channel, host, script_to_run, group_id=None):
         routing_key=host.get_routing_key(),
         body=json.dumps(exec_obj)
     )
+
+def get_current_system_update(host):
+    if host:
+        return SystemUpdate.query.filter_by(system_id=host.id).filter_by(is_current=1).first()
+    else:
+        return None
 
 def logcapture(log_obj, host):
     s = SystemUpdateLog()
@@ -265,7 +273,7 @@ def parse_message(msg, channel):
             return
 
         if not update_group is None:
-            cqs.add_host_to_group_if_not_exists(group_name, hostname)
+            cqs.add_host_to_group_if_not_exists(update_group, hostname)
         else:
             logging.info("group not found by id: %s" % (json_obj['GroupId']))
 
@@ -292,11 +300,13 @@ def parse_message(msg, channel):
             if group_id == "":
                 group_id = None
         except KeyError:
+            logging.info("GroupId from client is None - Returning")
             group_id = None
         update_group = UpdateGroup.get_by_id(group_id)
         if not update_group is None:
             group_name = update_group.group_name
         elif update_group is None:
+            logging.info("update_group is None - Returning")
             return
         # @TODO figure out if the following is necessary
         #if cqs.get_scripts_to_run_len(hostname, group_name) == 0:
@@ -304,15 +314,24 @@ def parse_message(msg, channel):
         #    return
 
         # Figure out how to confirm the script that is running
+        logging.info("cqs.running_group_updates:before %s" % (cqs.running_group_updates))
         cqs.set_script_ran(script_ran, hostname, group_name)
+        logging.info("cqs.running_group_updates:after %s" % (cqs.running_group_updates))
         logcapture(json_obj, host)
         if cqs.check_if_host_done(hostname, group_name):
+            logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
             current_update = SystemUpdate.query.filter_by(system_id=host.id).order_by('-id').first()
             finish_update(current_update, group_id)
+            cqs.remove_host_from_group(hostname, group_name)
             if cqs.check_if_group_done(group_name) is False:
                 next_host = cqs.get_next_host_by_group(group_name)
                 host = System.get_by_hostname(next_host)
-                host.start_update(group_id = group_id)
+                host.start_update(group_id=group_id)
+        else:
+            host, script_to_run = cqs.get_next_script_to_run(group_name)
+            execute(channel, host, script_to_run, group_id=group_id)
+            logging.info("cqs.check_if_host_done host::false: %s group_name: %s" % (hostname, group_name))
+
         return
 
         #if running_group_updates[group_name][hostname]['scripts_to_run'][0] == script_ran:
