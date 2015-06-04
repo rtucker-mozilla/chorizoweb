@@ -147,6 +147,8 @@ def action_watcher(client):
         client.basic_ack(msg)
 
 def finish_update(current_update, group_id=None):
+    if current_update is None:
+        logging.info("creating current_update in finish_update")
     update_log = SystemUpdateLog()
     update_log.system_update_id = current_update.id
     update_log.log_text = "Update Finished"
@@ -155,8 +157,8 @@ def finish_update(current_update, group_id=None):
     update_log.created_at = datetime.datetime.utcnow()
     if not group_id is None:
         update_log.group_id = group_id
-    current_update.finished_at = datetime.datetime.utcnow()
-    update_log.save()
+    else:
+        logging.info("unable to set group_id")
     current_update.finished_at = datetime.datetime.utcnow()
     current_update.is_current = False
     current_update.save()
@@ -178,7 +180,7 @@ def add_system_update_log(system, log_text, return_code, group_id=None):
     update_log.save()
 
 def start_update_log(system, group_id=None):
-    current_update = SystemUpdate.query.filter_by(system_id=system.id).filter_by(is_current=True).order_by('-id').first()
+    current_update = SystemUpdate.query.filter_by(system_id=system.id).filter_by(is_current=True).filter_by(group_id=group_id).order_by('-id').first()
     if current_update:
         finish_update(current_update)
     add_system_update_log(system, 'Update Started', 0, group_id=group_id)
