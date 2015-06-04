@@ -215,9 +215,11 @@ def execute(channel, host, script_to_run, group_id=None):
         body=json.dumps(exec_obj)
     )
 
-def get_current_system_update(host):
-    if host:
+def get_current_system_update(host, group_id=None):
+    if host and group_id is None:
         return SystemUpdate.query.filter_by(system_id=host.id).filter_by(is_current=1).first()
+    if host and not group_id is None
+        return SystemUpdate.query.filter_by(system_id=host.id).filter_by(is_current=1).filter_by(group_id=group_id).first()
     else:
         return None
 
@@ -322,6 +324,7 @@ def parse_message(msg, channel):
         if cqs.check_if_host_done(hostname, group_name):
             logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
             #current_update = SystemUpdate.query.filter_by(system_id=host.id).filter_by(group_id=group_id).order_by('-id').first()
+            current_update = get_current_system_update(host, group_id)
             if current_update is None:
                 logging.info("Unable to get current_update")
             else:
