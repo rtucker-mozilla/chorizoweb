@@ -57,15 +57,16 @@
                 <thead>
                 <tr>
                     <th>Update ID</th>
+                    <th>System</th>
                     <th>Start Time</th>
                     <th>Finish Time</th>
                     <th>Status</th>
-                    <th>Update ID</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr ng-repeat="update in group.recent_updates">
                 <td> <a href="/#/updatedetail/{{ update.id }}/">{{ update.id }}</a> </td>
+                    <td> {{ update.hostname }} </td>
                     <td> {{ update.created_at }} </td>
                     <td> {{ update.finished_at }} </td>
                     <td>
@@ -73,7 +74,6 @@
                         <span ng-if="update.status_code == 1">Warning</span>
                         <span ng-if="update.status_code == 2">Failed</span>
                     </td>
-                    <td> {{ update.id }} </td>
                 </tr>
                 </tbody>
                 <tfoot></tfoot>

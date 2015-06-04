@@ -119,6 +119,7 @@ def get_group(id):
         for update in group.recent_updates:
             tmp = {}
             tmp['id'] = update.id
+            tmp['hostname'] = update.system.hostname
             tmp['created_at'] = update.created_at.strftime("%Y-%m-%d %H:%I:%S")
             try:
                 tmp['finished_at'] = update.finished_at.strftime("%Y-%m-%d %H:%I:%S")
