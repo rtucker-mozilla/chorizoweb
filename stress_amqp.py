@@ -218,7 +218,7 @@ def execute(channel, host, script_to_run, group_id=None):
 def get_current_system_update(host, group_id=None):
     if host and group_id is None:
         return SystemUpdate.query.filter_by(system_id=host.id).filter_by(is_current=1).first()
-    if host and not group_id is None
+    elif host and not group_id is None:
         return SystemUpdate.query.filter_by(system_id=host.id).filter_by(is_current=1).filter_by(group_id=group_id).first()
     else:
         return None
