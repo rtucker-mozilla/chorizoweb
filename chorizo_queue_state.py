@@ -97,11 +97,9 @@ class ChorizoQueueState(object):
         cur_max = 0
         cur_max_host = {}
         try:
-            ret = sorted(self.running_group_updates[group_name].iteritems(), key=lambda (x, y): y['order'])
-            ret_dict = {}
-            ret_dict[ret[0][0]] = ret[0][1]
-            return ret_dict
-        except KeyError:
+            ret_sorted = sorted(self.running_group_updates[group_name].iteritems(), key=lambda (x, y): y['order'])
+            return ret_sorted[0][0]
+        except (KeyError, IndexError):
             return False
 
     def get_next_script_to_run(self, group_name):
