@@ -164,6 +164,8 @@ class testChorizoQueueState(unittest.TestCase):
     	group1.group_name = group_name
     	self.cqs.add_host_to_group_if_not_exists(group1, host_name)
     	self.cqs.add_host_to_group_if_not_exists(group1, host_name2)
+    	next_host = self.cqs.get_next_host_by_group(group1)
+    	self.assertFalse(next_host == False)
     	#self.assertEqual(self.cqs.get_next_host_by_group(group_name), host_name)
 if __name__ == '__main__':
     unittest.main()
