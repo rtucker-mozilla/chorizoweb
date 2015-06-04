@@ -322,8 +322,11 @@ def parse_message(msg, channel):
         logcapture(json_obj, host)
         if cqs.check_if_host_done(hostname, group_name):
             logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
-            current_update = SystemUpdate.query.filter_by(system_id=host.id).order_by('-id').first()
-            finish_update(current_update, group_id)
+            current_update = SystemUpdate.query.filter_by(system_id=host.id).filter_by(group_id=group_id).order_by('-id').first()
+            if current_update is None:
+                logging.info("Unable to get current_update")
+            else:
+                finish_update(current_update, group_id)
             cqs.remove_host_from_group(hostname, group_name)
             if cqs.check_if_group_done(group_name) is False:
                 next_host = cqs.get_next_host_by_group(group_name)
