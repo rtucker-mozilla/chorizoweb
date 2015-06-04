@@ -187,16 +187,12 @@ def start_update_log(system, group_id=None):
     return True
 
 def run_updates(channel, update_group):
-    global running_group_updates
 
     if not update_group is None:
         group_name = update_group.group_name
         host, script_to_run = cqs.get_next_script_to_run(group_name)
         if script_to_run and host:
             execute(channel, host, script_to_run, group_id=update_group.id)
-            #cqs.set_script_ran(script_to_run, host, group_name)
-    #if update_group in running_group_updates and len(running_group_updates[update_group.group_name]) == 0:
-    #    del running_group_updates[update_group.group_name]
 
 def execute(channel, host, script_to_run, group_id=None):
     if not hasattr(host, 'get_routing_key'):
@@ -296,6 +292,7 @@ def parse_message(msg, channel):
         # remove json
 
         hostname = json_obj['Hostname']
+        host = System.get_by_hostname(hostname)
         script_ran = json_obj['Args'][0]
         try:
             group_id = json_obj['GroupId']
@@ -319,6 +316,8 @@ def parse_message(msg, channel):
         logging.info("cqs.running_group_updates:before %s" % (cqs.running_group_updates))
         cqs.set_script_ran(script_ran, hostname, group_name)
         logging.info("cqs.running_group_updates:after %s" % (cqs.running_group_updates))
+        if not get_current_system_update(host):
+            start_update_log(host, group_id)
         logcapture(json_obj, host)
         if cqs.check_if_host_done(hostname, group_name):
             logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
