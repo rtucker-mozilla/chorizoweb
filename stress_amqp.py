@@ -336,6 +336,7 @@ def parse_message(msg, channel):
                 host = System.get_by_hostname(next_host)
                 logging.info("host: %s" % (host))
                 host.start_update(group_id=group_id)
+                logging.info("host: %s started update" % (host))
         else:
             host, script_to_run = cqs.get_next_script_to_run(group_name)
             execute(channel, host, script_to_run, group_id=group_id)
