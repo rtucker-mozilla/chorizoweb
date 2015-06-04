@@ -330,7 +330,7 @@ def parse_message(msg, channel):
                 finish_update(current_update, group_id)
             cqs.remove_host_from_group(hostname, group_name)
             if cqs.check_if_group_done(group_name) is False:
-                next_host = cqs.get_next_host_by_group(group_name)
+                next_host = cqs.get_next_host_by_group(update_group)
                 host = System.get_by_hostname(next_host)
                 host.start_update(group_id=group_id)
         else:
