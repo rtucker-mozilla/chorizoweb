@@ -92,9 +92,15 @@ class ChorizoQueueState(object):
         except KeyError:
             return 0
 
-    def get_next_host_by_group(self, group_name):
+    def get_next_host_by_group(self, group):
+        group_name = group.group_name
+        cur_max = 0
+        cur_max_host = {}
         try:
-            return self.running_group_updates[group_name][0]
+            ret = sorted(self.running_group_updates[group_name].iteritems(), key=lambda (x, y): y['order'])
+            ret_dict = {}
+            ret_dict[ret[0][0]] = ret[0][1]
+            return ret_dict
         except KeyError:
             return False
 
