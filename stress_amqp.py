@@ -159,6 +159,7 @@ def finish_update(current_update, group_id=None):
         update_log.group_id = group_id
     else:
         logging.info("unable to set group_id")
+    update_log.save()
     current_update.finished_at = datetime.datetime.utcnow()
     current_update.is_current = False
     current_update.save()
