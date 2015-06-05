@@ -14,6 +14,7 @@ from moz_au_web.database import (
     relationship,
     SurrogatePK,
 )
+from sqlalchemy.ext.orderinglist import ordering_list
 import logging
 LOG_FORMAT = (
     '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
@@ -155,7 +156,7 @@ class UpdateGroup(SurrogatePK, Model):
     __tablename__ = 'update_group'
     group_name = Column(db.String(80), unique=True, nullable=False)
     systems = db.relationship('System', secondary=update_groups,
-        backref=db.backref('updategroups', lazy='dynamic'), order_by="update_groups.id")
+        backref=db.backref('updategroups', lazy='dynamic'), collection_class=ordering_list("id"))
 
     def get_queue_name_from_hostname(self, hostname):
         replaced_hostname = hostname.replace('.','-')
