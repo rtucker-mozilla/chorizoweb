@@ -105,13 +105,11 @@ class ChorizoQueueState(object):
         group_name = group.group_name
         if not group_name in self.running_group_updates:
             return None, None
-        for dict_host in self.running_group_updates[group_name].copy().iterkeys():
-            try:
-                script_to_run = self.running_group_updates[group_name][dict_host]['scripts_to_run'][0]
-            except (KeyError, IndexError):
-                script_to_run = None
-
-            if dict_host and script_to_run:
-                return dict_host, script_to_run
+        try:
+            script_to_run = self.running_group_updates[group_name][next_host]['scripts_to_run'][0]
+        except (KeyError, IndexError):
+            script_to_run = None
+        if next_host and script_to_run:
+            return next_host, script_to_run
 
         return None, None
