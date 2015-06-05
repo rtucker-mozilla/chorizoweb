@@ -599,10 +599,16 @@ def grouphosts(id):
     r_systems = []
     group = UpdateGroup.get_by_id(id)
     if not group is None:
-        for system in group.systems:
+        query = "select id, system_id, update_group_id from update_groups where update_group_id = :id order by id"
+        result = db.engine.execute(text(query), id=group.id)
+        for system in result:
             tmp = {}
-            tmp['hostname'] = system.hostname
-            tmp['id'] = system.id
+            system_id = system[1]
+            tmp['id'] = system_id
+            try:
+                tmp['hostname'] = System.get_by_id(system_id).hostname
+            except AttributeError:
+                continue
             r_systems.append(tmp)
 
     return jsonify({
