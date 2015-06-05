@@ -118,7 +118,10 @@ def get_group(id):
             system_id = system[1]
             tmp = {}
             tmp['id'] = system_id
-            tmp['hostname'] = System.get_by_id(system_id).hostname
+            try:
+                tmp['hostname'] = System.get_by_id(system_id).hostname
+            except AttributeError:
+                continue
             r_group['update_systems'].append(tmp)
         for update in group.recent_updates:
             tmp = {}
