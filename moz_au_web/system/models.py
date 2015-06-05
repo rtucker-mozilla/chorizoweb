@@ -146,6 +146,7 @@ class SystemPong(SurrogatePK, Model):
     pong_time = Column(db.DateTime)
 
 update_groups = db.Table('update_groups',
+    db.Column('id', db.Integer, primary_key=True),
     db.Column('system_id', db.Integer, db.ForeignKey('systems.id')),
     db.Column('update_group_id', db.Integer, db.ForeignKey('update_group.id'))
 )
@@ -154,7 +155,7 @@ class UpdateGroup(SurrogatePK, Model):
     __tablename__ = 'update_group'
     group_name = Column(db.String(80), unique=True, nullable=False)
     systems = db.relationship('System', secondary=update_groups,
-        backref=db.backref('updategroups', lazy='dynamic'))
+        backref=db.backref('updategroups', lazy='dynamic'), order_by="update_groups.id")
 
     def get_queue_name_from_hostname(self, hostname):
         replaced_hostname = hostname.replace('.','-')

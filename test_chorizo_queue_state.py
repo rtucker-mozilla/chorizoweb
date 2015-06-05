@@ -154,7 +154,7 @@ class testChorizoQueueState(unittest.TestCase):
     	self.cqs.remove_host_from_group(host_name2, group_name2)
     	self.assertEqual(self.cqs.check_if_group_done(group_name2), True)
 
-    def test11_get_next_host_by_group(self):
+    def test12_get_next_host_by_group(self):
     	group_name = 'Test Group 1'
     	group_name2 = 'Test Group 2'
     	host_name = 'foo.localdomain'
@@ -167,6 +167,10 @@ class testChorizoQueueState(unittest.TestCase):
     	next_host = self.cqs.get_next_host_by_group(group1)
     	self.assertFalse(next_host == False)
     	self.assertEqual(next_host, host_name)
+    	self.cqs.remove_host_from_group(host_name, group_name)
+    	next_host = self.cqs.get_next_host_by_group(group1)
+    	self.assertFalse(next_host == False)
+    	self.assertEqual(next_host, host_name2)
 
 if __name__ == '__main__':
     unittest.main()
