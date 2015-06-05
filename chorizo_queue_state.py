@@ -100,7 +100,9 @@ class ChorizoQueueState(object):
         except (KeyError, IndexError):
             return False
 
-    def get_next_script_to_run(self, group_name):
+    def get_next_script_to_run(self, group):
+        next_host = self.get_next_host_by_group(group)
+        group_name = group.group_name
         if not group_name in self.running_group_updates:
             return None, None
         for dict_host in self.running_group_updates[group_name].copy().iterkeys():
