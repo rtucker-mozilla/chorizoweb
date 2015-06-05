@@ -194,7 +194,7 @@ def run_updates(channel, update_group):
 
     if not update_group is None:
         group_name = update_group.group_name
-        host, script_to_run = cqs.get_next_script_to_run(group_name)
+        host, script_to_run = cqs.get_next_script_to_run(update_group)
         if script_to_run and host:
             execute(channel, host, script_to_run, group_id=update_group.id)
 
@@ -347,7 +347,7 @@ def parse_message(msg, channel):
                 logging.info("Removing group: %s" % (update_group.group_name))
                 cqs.remove_group(group_name)
         else:
-            host, script_to_run = cqs.get_next_script_to_run(group_name)
+            host, script_to_run = cqs.get_next_script_to_run(update_group)
             execute(channel, host, script_to_run, group_id=group_id)
             logging.info("cqs.check_if_host_done host::false: %s group_name: %s" % (hostname, group_name))
 
