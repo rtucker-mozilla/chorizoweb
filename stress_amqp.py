@@ -133,9 +133,14 @@ def action_watcher(client):
             client.basic_ack(msg)
         group_name = group.group_name
         cqs.add_group_if_not_exists(group_name)
-        if len(group.systems) > 0:
-            for system in group.systems:
-                cqs.add_host_to_group_if_not_exists(group, system.hostname, add_scripts=True)
+        group_systems = group.sorted_systems_list
+        if len(group_systems) > 0:
+            for system in group_systems:
+                try:
+                    system_hostname = system['hostname']
+                    cqs.add_host_to_group_if_not_exists(group, system_hostname, add_scripts=True)
+                except KeyError:
+                    pass
         run_updates(client, group)
 
     consume_promise = client.basic_consume(queue=master_q)
