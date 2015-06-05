@@ -4,6 +4,7 @@ from flask import (Blueprint, request, render_template, flash, url_for,
                     redirect, session, jsonify, make_response, current_app)
 from flask.ext.login import login_user, login_required, logout_user
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import text
 
 from moz_au_web.extensions import login_manager
 from moz_au_web.user.models import User
@@ -111,10 +112,13 @@ def get_group(id):
         r_group['group_name'] = group.group_name
         r_group['update_systems'] = []
         r_group['recent_updates'] = []
-        for system in group.systems:
+        query = "select id, system_id, update_group_id from update_groups where update_group_id = :id order by id"
+        result = db.engine.execute(text(query), id=group.id)
+        for system in result:
+            system_id = system[1]
             tmp = {}
-            tmp['id'] = system.id
-            tmp['hostname'] = system.hostname
+            tmp['id'] = system_id
+            tmp['hostname'] = System.get_by_id(system_id).hostname
             r_group['update_systems'].append(tmp)
         for update in group.recent_updates:
             tmp = {}
