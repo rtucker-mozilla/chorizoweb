@@ -94,8 +94,6 @@ class ChorizoQueueState(object):
 
     def get_next_host_by_group(self, group):
         group_name = group.group_name
-        cur_max = 0
-        cur_max_host = {}
         try:
             ret_sorted = sorted(self.running_group_updates[group_name].iteritems(), key=lambda (x, y): y['order'])
             return ret_sorted[0][0]

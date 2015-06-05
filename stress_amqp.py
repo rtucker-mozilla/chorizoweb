@@ -114,8 +114,6 @@ def action_watcher(client):
             client.basic_ack(msg)
             return
         client.basic_ack(msg)
-        print json_obj
-        print ping_obj
         try:
             client.basic_publish(
                 exchange=EXCHANGE,
