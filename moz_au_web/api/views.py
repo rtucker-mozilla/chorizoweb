@@ -115,7 +115,7 @@ def get_group(id):
         query = "select id, system_id, update_group_id from update_groups where update_group_id = :id order by id"
         result = db.engine.execute(text(query), id=group.id)
         for system in result:
-            system_id = system[1]
+            system_id = int(system[1])
             tmp = {}
             tmp['id'] = system_id
             try:
@@ -603,7 +603,7 @@ def grouphosts(id):
         result = db.engine.execute(text(query), id=group.id)
         for system in result:
             tmp = {}
-            system_id = system[1]
+            system_id = int(system[1])
             tmp['id'] = system_id
             try:
                 tmp['hostname'] = System.get_by_id(system_id).hostname
