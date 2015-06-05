@@ -343,6 +343,8 @@ def parse_message(msg, channel):
                 logging.info("group_id: %s" % (group_id))
                 run_updates(channel, update_group)
                 logging.info("host: %s started update" % (host))
+            else:
+                cqs.remove_group(group_name)
         else:
             host, script_to_run = cqs.get_next_script_to_run(group_name)
             execute(channel, host, script_to_run, group_id=group_id)
