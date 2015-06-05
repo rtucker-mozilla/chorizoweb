@@ -15,6 +15,7 @@ from moz_au_web.database import (
     SurrogatePK,
 )
 from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.sql import text
 import logging
 LOG_FORMAT = (
     '\n%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n\n' +
@@ -181,6 +182,22 @@ class UpdateGroup(SurrogatePK, Model):
         ret_obj['args'] = []
         ret_obj['timestamp'] = dt.datetime.now().strftime("%Y-%m-%d %H:%I:%s")
         return ret_obj
+
+    @property
+    def sorted_systems_list(self):
+        ret_list = []
+        query = "select id, system_id, update_group_id from update_groups where update_group_id = :id order by id"
+        result = db.engine.execute(text(query), id=self.id)
+        for system in result:
+            system_id = int(system[1])
+            tmp = {}
+            tmp['id'] = system_id
+            try:
+                tmp['hostname'] = System.get_by_id(system_id).hostname
+            except AttributeError:
+                continue
+            ret_list.append(tmp)
+        return ret_list
 
     def start_update(self, channel, concurrent=False):
         if concurrent == True:

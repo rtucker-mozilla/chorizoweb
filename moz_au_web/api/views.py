@@ -4,7 +4,6 @@ from flask import (Blueprint, request, render_template, flash, url_for,
                     redirect, session, jsonify, make_response, current_app)
 from flask.ext.login import login_user, login_required, logout_user
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql import text
 
 from moz_au_web.extensions import login_manager
 from moz_au_web.user.models import User
@@ -112,17 +111,7 @@ def get_group(id):
         r_group['group_name'] = group.group_name
         r_group['update_systems'] = []
         r_group['recent_updates'] = []
-        query = "select id, system_id, update_group_id from update_groups where update_group_id = :id order by id"
-        result = db.engine.execute(text(query), id=group.id)
-        for system in result:
-            system_id = int(system[1])
-            tmp = {}
-            tmp['id'] = system_id
-            try:
-                tmp['hostname'] = System.get_by_id(system_id).hostname
-            except AttributeError:
-                continue
-            r_group['update_systems'].append(tmp)
+        r_group['update_systems'] = group.sorted_systems_list
         for update in group.recent_updates:
             tmp = {}
             tmp['id'] = update.id
@@ -599,20 +588,15 @@ def grouphosts(id):
     r_systems = []
     group = UpdateGroup.get_by_id(id)
     if not group is None:
-        query = "select id, system_id, update_group_id from update_groups where update_group_id = :id order by id"
-        result = db.engine.execute(text(query), id=group.id)
-        for system in result:
-            tmp = {}
-            system_id = int(system[1])
-            tmp['id'] = system_id
-            try:
-                tmp['hostname'] = System.get_by_id(system_id).hostname
-            except AttributeError:
-                continue
-            r_systems.append(tmp)
+        r_systems = group.sorted_systems_list
+
+    try:
+        total_count = len(r_systems)
+    except TypeError:
+        total_count = 0
 
     return jsonify({
-        'total_count': len(r_systems),
+        'total_count': total_count,
         'limit': 0,
         'offset': 0,
         'systems': r_systems}
