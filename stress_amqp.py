@@ -141,6 +141,7 @@ def action_watcher(client):
                     cqs.add_host_to_group_if_not_exists(group, system_hostname, add_scripts=True)
                 except KeyError:
                     pass
+        logging.info("run_updates for: %s" % (cqs.running_group_updates))
         run_updates(client, group)
 
     consume_promise = client.basic_consume(queue=master_q)
