@@ -3,11 +3,32 @@
         <h1>
             <span>Group Detail: {{ group.group_name }}</span>
         </h1>
+        <div class="flash-message" flash-message="5000" ></div>
+        <h4>
+            <span ng-if='cronfile == ""'>
+                <button class="btn btn-primary" ng-show="!show_form" ng-click="showCreateCronfile()">Create Schedule</button>
+            </span>
+            <span ng-if='cronfile != "" && !show_form'>Schedule: <span ng-bind="cronfile"></span>
+                <br /><button class="btn btn-primary" style="margin-top: 5px;" ng-click="showUpdateCronfile()">Update Schedule</button>
+            </span>
+            <div>
+                <form ng-show="show_form">
+                    <div class="form-group">
+                        <label ng-bind="form_message" for="cronfile"></label>
+                        <input type="text" class="form-control" name="cronfile" ng-model="cronfile"></input>
+                    </div>
+                    <div class="form-group">
+                        <button ng-click="saveCronfile()" class='btn btn-primary btn-small'>Save Schedule</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </h4>
         <hr/>
         <span>
             <button ng-click="updateAllGroupHosts()" class='btn btn-primary btn-small'>Update All Group Hosts</button>
         </span>
-        <div class="flash-message" flash-message="5000" ></div>
     </div>
     <div class="row">
         <div>

@@ -109,6 +109,7 @@ def get_group(id):
         r_group = {}
         r_group['id'] = group.id
         r_group['group_name'] = group.group_name
+        r_group['cronfile'] = group.cronfile
         r_group['update_systems'] = []
         r_group['recent_updates'] = []
         r_group['update_systems'] = group.sorted_systems_list
@@ -143,6 +144,7 @@ def groups_create():
     try:
         u_group = UpdateGroup()
         u_group.group_name = json_data.get('group_name')
+        u_group.group_name = json_data.get('cronfile', '')
         u_group.save()
     except:
         return make_response(jsonify({'groups': s_dict}), 200)
@@ -203,9 +205,9 @@ def read_system(id):
 
 @blueprint.route("/updatecronfile/<id>/", methods=["POST"])
 def updatecronfile(id):
-    s = System.get_by_id(id)
-    s.cronfile = request.get_json()['cronfile']
-    s.save()
+    update_group = UpdateGroup.get_by_id(id)
+    update_group.cronfile = request.get_json()['cronfile']
+    update_group.save()
     return make_response(jsonify({'status': 'OK'}), 200)
 
 @blueprint.route("/system/<hostname>/", methods=["POST"])

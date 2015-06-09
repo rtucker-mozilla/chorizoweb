@@ -428,10 +428,47 @@ mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $rout
     $scope.id = $routeParams['id'];
     $scope.has_loaded = false;
     $scope.debug = true;
+    $scope.cronfile = '';
+    $scope.form_message = "Edit Schedule"
     function log(message){
         if($scope.debug && console){
             console.log(message);
         }
+    }
+
+    function saveCron(){
+        data = {};
+        data['cronfile'] = $scope.cronfile;
+        $http({
+            withCredentials: false,
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            url: '/api/updatecronfile/' + $scope.id + '/',
+            data: JSON.stringify(data)
+        }).success(function(data){
+            var message = "Schedule Saved";
+            Flash.create('success', message);
+        }).error(function(data){
+            log(data);
+            var message = "Error: Unable to save schedule. " + data.message;
+            Flash.create('danger', message);
+        });
+    }
+
+    $scope.showCreateCronfile = function(){
+        $scope.form_message = "Create Schedule"
+        $scope.show_form = true;
+    }
+
+    $scope.showUpdateCronfile = function(){
+        $scope.form_message = "Edit Schedule"
+        $scope.show_form = true;
+    }
+
+    $scope.saveCronfile = function(){
+        $scope.show_form = false;
+        saveCron();
+
     }
 
     $scope.updateHost = function(system_id){
@@ -462,6 +499,7 @@ mozAUApp.controller('GroupDetailCtrl', function ($scope, $http, $interval, $rout
     function get_group(){
         $http.get('/api/groups/' + $scope.id + '/').success(function(data){
             $scope.group = data.group;
+            $scope.cronfile = $scope.group.cronfile;
         });
         $scope.has_loaded = true;
     }
