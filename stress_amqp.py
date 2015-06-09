@@ -354,26 +354,6 @@ def parse_message(msg, channel):
 
         return
 
-        #if running_group_updates[group_name][hostname]['scripts_to_run'][0] == script_ran:
-        #    del running_group_updates[group_name][hostname]['scripts_to_run'][0]
-        #    running_group_updates[group_name][hostname]['scripts_ran'].append(script_ran)
-        #    logcapture(json_obj, host)
-        #    if len(running_group_updates[group_name][hostname]['scripts_to_run']) > 0:
-        #        run_updates(channel, update_group)
-        #    else:
-
-        #        current_update = SystemUpdate.query.filter_by(system_id=host.id).order_by('-id').first()
-        #        if not current_update is None:
-        #            finish_update(current_update, group_id)
-        #        else:
-        #            logging.error("Could not get current update for group: %s and host: %s" % (update_group.group_name, hostname))
-        #        prune_running_updates(update_group)
-
-def prune_running_updates(update_group):
-    global running_group_updates
-    if update_group in running_group_updates and len(running_group_updates[update_group.group_name]) == 0:
-        del running_group_updates[update_group.group_name]
-
 @puka_async_generator
 def worker(client, q):
     master_q = "master.%s" % (q)

@@ -158,6 +158,7 @@ class UpdateGroup(SurrogatePK, Model):
     group_name = Column(db.String(80), unique=True, nullable=False)
     systems = db.relationship('System', secondary=update_groups,
         backref=db.backref('updategroups', lazy='dynamic'), collection_class=ordering_list("id"))
+    cronfile = Column(db.String(80), unique=False, nullable=True)
 
     def get_queue_name_from_hostname(self, hostname):
         replaced_hostname = hostname.replace('.','-')
