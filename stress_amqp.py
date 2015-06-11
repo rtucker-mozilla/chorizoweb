@@ -20,6 +20,10 @@ from celery_tasks import async_pong
 from chorizo_queue_state import ChorizoQueueState
 cqs = ChorizoQueueState()
 import logging
+ALLOWED_EXIT_CODES = [
+    0,
+    128
+]
 
 
 ENV = os.environ.get('ENV', False)
@@ -150,14 +154,20 @@ def action_watcher(client):
         parse_action(msg)
         client.basic_ack(msg)
 
-def finish_update(current_update, group_id=None):
+def finish_update(current_update, group_id=None, is_error=False, manual_message=None):
     if current_update is None:
         logging.info("creating current_update in finish_update")
     update_log = SystemUpdateLog()
     update_log.system_update_id = current_update.id
-    update_log.log_text = "Update Finished"
+    if manual_message is not None:
+        update_log.log_text = manual_message
+    else:
+        update_log.log_text = "Update Finished"
     update_log.system_id = current_update.system.id
-    update_log.return_code = 0
+    if is_error is True:
+        update_log.return_code = 255
+    else:
+        update_log.return_code = 0
     update_log.created_at = datetime.datetime.utcnow()
     if not group_id is None:
         update_log.group_id = group_id
@@ -166,6 +176,7 @@ def finish_update(current_update, group_id=None):
     update_log.save()
     current_update.finished_at = datetime.datetime.utcnow()
     current_update.is_current = False
+    current_update.status_code = 2
     current_update.save()
 
 def add_system_update_log(system, log_text, return_code, group_id=None):
@@ -326,10 +337,23 @@ def parse_message(msg, channel):
         if not get_current_system_update(host):
             start_update_log(host, group_id)
         logcapture(json_obj, host)
+        try:
+            exit_code = int(json_obj['ExitCode'])
+        except:
+            exit_code = None
+        current_update = get_current_system_update(host, group_id)
+
+        if not exit_code is None:
+            if not exit_code in ALLOWED_EXIT_CODES:
+                # We have an unknown exit code
+                # Immediately die
+                cqs.remove_host_from_group(hostname, group_name)
+                cqs.remove_group(group_name)
+                finish_update(current_update, group_id, is_error=True, manual_message="Received unallowed return code")
+                return
         if cqs.check_if_host_done(hostname, group_name):
             logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
             #current_update = SystemUpdate.query.filter_by(system_id=host.id).filter_by(group_id=group_id).order_by('-id').first()
-            current_update = get_current_system_update(host, group_id)
             if current_update is None:
                 logging.info("Unable to get current_update")
             else:
