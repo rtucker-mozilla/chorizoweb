@@ -20,6 +20,7 @@ from celery_tasks import async_pong
 from chorizo_queue_state import ChorizoQueueState
 cqs = ChorizoQueueState()
 import logging
+EXIT_CODE_REBOOT = 128
 ALLOWED_EXIT_CODES = [
     0,
     128
@@ -105,6 +106,10 @@ def action_watcher(client):
             start_update(json_obj)
         elif command == 'start_group_update':
             start_group_update(json_obj)
+        elif command == 'start_reboot':
+            start_reboot(json_obj)
+        else:
+            print "Unknown Command: %s" % (command)
 
     def ping(json_obj):
         ping_obj = {}
@@ -126,6 +131,28 @@ def action_watcher(client):
                 )
         except Exception, e:
             pass
+
+    def start_reboot(json_obj):
+        ping_obj = {}
+        ping_obj['hash'] = str(json_obj['hash'])
+        ping_obj['command'] = 'start_reboot'
+        ping_obj['args'] = []
+        ping_obj['timestamp'] = str(json_obj['timestamp'])
+        try:
+            routing_key = "%s.host" % json_obj['host']
+        except KeyError:
+            client.basic_ack(msg)
+            return
+        client.basic_ack(msg)
+        try:
+            client.basic_publish(
+                exchange=EXCHANGE,
+                routing_key = str(routing_key),
+                body = json.dumps(ping_obj)
+                )
+        except Exception, e:
+            pass
+
 
     def start_group_update(json_obj):
         # Send the message to the client system that it should start to update
@@ -154,6 +181,24 @@ def action_watcher(client):
         parse_action(msg)
         client.basic_ack(msg)
 
+def log_reboot(current_update, group_id, host, message=None):
+    if message is None:
+        message = "Rebooting Host"
+    update_log = SystemUpdateLog()
+    update_log.system_update_id = current_update.id
+    update_log.system_id = current_update.system.id
+    update_log.group_id = group_id
+    update_log.return_code = 0
+    update_log.created_at = datetime.datetime.utcnow()
+    update_log.log_text = message
+    if not group_id is None:
+        update_log.group_id = group_id
+    else:
+        logging.info("unable to set group_id")
+    update_log.save()
+    current_update.status_code = 4
+    current_update.save()
+
 def finish_update(current_update, group_id=None, is_error=False, manual_message=None):
     if current_update is None:
         logging.info("creating current_update in finish_update")
@@ -176,7 +221,10 @@ def finish_update(current_update, group_id=None, is_error=False, manual_message=
     update_log.save()
     current_update.finished_at = datetime.datetime.utcnow()
     current_update.is_current = False
-    current_update.status_code = 2
+    if is_error is True:
+        current_update.status_code = 2
+    else:
+        current_update.status_code = 0
     current_update.save()
 
 def add_system_update_log(system, log_text, return_code, group_id=None):
@@ -191,7 +239,7 @@ def add_system_update_log(system, log_text, return_code, group_id=None):
     update_log.system_update_id = new_update.id
     update_log.log_text = log_text
     update_log.system_id = system.id
-    update_log.return_code = 0
+    update_log.return_code = 1
     update_log.created_at = datetime.datetime.utcnow()
     update_log.save()
 
@@ -209,6 +257,24 @@ def run_updates(channel, update_group):
         host, script_to_run = cqs.get_next_script_to_run(update_group)
         if script_to_run and host:
             execute(channel, host, script_to_run, group_id=update_group.id)
+
+def reboot_host(channel, host, group_id):
+    current_ms = str(time.time())
+    exec_obj = {}
+    exec_obj['command'] = "start_reboot"
+    exec_obj['args'] = ''
+    exec_obj['hash'] = hashlib.sha1(current_ms).hexdigest()
+    exec_obj['timestamp'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%s")
+    if not group_id is None:
+        exec_obj['groupid'] = group_id
+    else:
+        exec_obj['group_id'] = ""
+    channel.basic_publish(
+        exchange='chorizo',
+        routing_key=host.get_routing_key(),
+        body=json.dumps(exec_obj)
+    )
+    cqs.set_host_rebooted(host, group_id)
 
 def execute(channel, host, script_to_run, group_id=None):
     if not hasattr(host, 'get_routing_key'):
@@ -351,32 +417,66 @@ def parse_message(msg, channel):
                 cqs.remove_group(group_name)
                 finish_update(current_update, group_id, is_error=True, manual_message="Received unallowed return code")
                 return
-        if cqs.check_if_host_done(hostname, group_name):
-            logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
-            #current_update = SystemUpdate.query.filter_by(system_id=host.id).filter_by(group_id=group_id).order_by('-id').first()
-            if current_update is None:
-                logging.info("Unable to get current_update")
-            else:
-                finish_update(current_update, group_id)
-            cqs.remove_host_from_group(hostname, group_name)
-            logging.info("removed host: %s from group: %s" % (hostname, group_name))
-            if cqs.check_if_group_done(group_name) is False:
-                next_host = cqs.get_next_host_by_group(update_group)
-                logging.info("next_host: %s" % (next_host))
-                host = System.get_by_hostname(next_host)
-                logging.info("host: %s" % (host))
-                logging.info("group_id: %s" % (group_id))
-                run_updates(channel, update_group)
-                logging.info("host: %s started update" % (host))
-            else:
-                logging.info("Removing group: %s" % (update_group.group_name))
-                cqs.remove_group(group_name)
-        else:
-            host, script_to_run = cqs.get_next_script_to_run(update_group)
-            execute(channel, host, script_to_run, group_id=group_id)
-            logging.info("cqs.check_if_host_done host::false: %s group_name: %s" % (hostname, group_name))
+            elif exit_code == EXIT_CODE_REBOOT:
+                log_reboot(current_update, group_id, host)
+                reboot_host(channel, host, group_id)
+                return
+        execute_if_not_done(host, update_group, current_update, channel)
+
 
         return
+    elif action == "hello_resp":
+        hostname = json_obj['Hostname']
+        host = System.get_by_hostname(hostname)
+        current_update = get_current_system_update(host, group_id=None)
+        try:
+            group_id = json_obj['GroupId']
+            update_group = UpdateGroup.get_by_id(group_id)
+            if group_id == "":
+                group_id = None
+        except KeyError:
+            logging.info("GroupId from client is None - Returning")
+            group_id = None
+            update_group = None
+        execute_if_not_done(host, update_group, current_update, channel)
+
+def execute_if_not_done(host, update_group, current_update, channel):
+    # We don't have an update group
+    # Host probably rebooted
+    if update_group is None:
+        group_id = cqs.get_rebooted_group_id_by_host(host)
+        update_group = UpdateGroup.get_by_id(group_id)
+        if update_group is None:
+            return
+        cqs.remove_host_rebooted(host)
+    group_name = update_group.group_name
+    group_id = update_group.id
+    hostname = host.hostname
+    if cqs.check_if_host_done(hostname, group_name):
+        logging.info("cqs.check_if_host_done host::true: %s group_name: %s" % (hostname, group_name))
+        #current_update = SystemUpdate.query.filter_by(system_id=host.id).filter_by(group_id=group_id).order_by('-id').first()
+        if current_update is None:
+            logging.info("Unable to get current_update")
+        else:
+            finish_update(current_update, group_id)
+        cqs.remove_host_from_group(hostname, group_name)
+        logging.info("removed host: %s from group: %s" % (hostname, group_name))
+        if cqs.check_if_group_done(group_name) is False:
+            next_host = cqs.get_next_host_by_group(update_group)
+            logging.info("next_host: %s" % (next_host))
+            host = System.get_by_hostname(next_host)
+            logging.info("host: %s" % (host))
+            logging.info("group_id: %s" % (group_id))
+            run_updates(channel, update_group)
+            logging.info("host: %s started update" % (host))
+        else:
+            logging.info("Removing group: %s" % (update_group.group_name))
+            cqs.remove_group(group_name)
+    else:
+        host, script_to_run = cqs.get_next_script_to_run(update_group)
+        execute(channel, host, script_to_run, group_id=group_id)
+        logging.info("cqs.check_if_host_done host::false: %s group_name: %s" % (hostname, group_name))
+
 
 @puka_async_generator
 def worker(client, q):

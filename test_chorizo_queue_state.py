@@ -79,11 +79,11 @@ class testChorizoQueueState(unittest.TestCase):
     	self.cqs.add_host_to_group_if_not_exists(group1, host_name)
     	self.cqs.add_script_to_host_group(script_name, host_name, group1)
     	self.cqs.add_script_to_host_group(script_name2, host_name, group1)
-    	host, next_script = self.cqs.get_next_script_to_run(group_name)
+    	host, next_script = self.cqs.get_next_script_to_run(group1)
     	self.assertEqual(host, host_name)
     	self.assertEqual(next_script, script_name)
     	self.cqs.set_script_ran(script_name, host_name, group_name)
-    	host, next_script = self.cqs.get_next_script_to_run(group_name)
+    	host, next_script = self.cqs.get_next_script_to_run(group1)
     	self.assertEqual(host, host_name)
     	self.assertEqual(next_script, script_name2)
 
@@ -172,5 +172,20 @@ class testChorizoQueueState(unittest.TestCase):
     	self.assertFalse(next_host == False)
     	self.assertEqual(next_host, host_name2)
 
+    def test13_set_host_rebooted(self):
+        group_name = 'Test Group 1'
+        host_name = 'foo.localdomain'
+        group1 = UpdateGroup()
+        group1.group_name = group_name
+        host = System()
+        host.hostname = host_name
+        self.assertEqual(self.cqs.rebooting_hosts, {})
+        self.cqs.set_host_rebooted(host, 1)
+        self.assertEqual(len(self.cqs.rebooting_hosts), 1)
+        self.assertEqual(self.cqs.rebooting_hosts, {host_name: {'group_id': 1}})
+        self.assertEqual(self.cqs.get_rebooted_group_id_by_host(host), 1)
+        self.cqs.remove_host_rebooted(host)
+        self.assertEqual(len(self.cqs.rebooting_hosts), 0)
+        self.assertEqual(self.cqs.rebooting_hosts, {})
 if __name__ == '__main__':
     unittest.main()

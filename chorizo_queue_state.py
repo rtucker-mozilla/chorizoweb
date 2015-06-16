@@ -2,6 +2,7 @@ class ChorizoQueueState(object):
 
     def __init__(self):
         self.running_group_updates = {}
+        self.rebooting_hosts = {}
 
     def has_group(self, group_name):
         return group_name in self.running_group_updates
@@ -24,6 +25,23 @@ class ChorizoQueueState(object):
             if add_scripts is True:
                 for s in group.scripts:
                     self.running_group_updates[group_name][host_name]['scripts_to_run'].append(s.script.file_name)
+
+    def set_host_rebooted(self, host, group_id):
+        self.rebooting_hosts[host.hostname] = {}
+        self.rebooting_hosts[host.hostname]['group_id'] = group_id
+
+    def remove_host_rebooted(self, host):
+        try:
+            del self.rebooting_hosts[host.hostname]
+        except KeyError:
+            pass
+
+    def get_rebooted_group_id_by_host(self, host):
+        try:
+            return self.rebooting_hosts[host.hostname]['group_id']
+        except KeyError:
+            return None
+
 
 
     def add_script_to_host_group(self, script_name, host_name, group):

@@ -248,6 +248,8 @@ class SystemUpdate(SurrogatePK, Model):
         0 = OK
         1 = Warning
         2 = Failed
+        3 = Running
+        4 = Host Rebooting
     """
     status_code = Column(db.Integer, nullable=False, default=0)
 
