@@ -8,8 +8,8 @@ from croniter import croniter
 from flask.ext.script import Manager
 from moz_au_web.app import create_app
 from moz_au_web.settings import ProdConfig, DevConfig
-from moz_au_web.system.models import UpdateGroup
 from celery_tasks import async_pong
+from moz_au_web.system.models import UpdateGroup
 import logging
 
 ENV = os.environ.get('ENV', False)

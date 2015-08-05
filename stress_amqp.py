@@ -80,7 +80,7 @@ def puka_async_generator(method):
 @puka_async_generator
 def action_watcher(client):
     # consume a queue for actions injected
-    master_q = "action"
+    master_q = "master.action"
     logging.info("action_watcher: declaring queue: %s" % master_q)
     client.queue_declare(queue=master_q, durable=True)
 
@@ -481,6 +481,7 @@ def execute_if_not_done(host, update_group, current_update, channel):
 @puka_async_generator
 def worker(client, q):
     master_q = "master.%s" % (q)
+    master_q = 'host-action'
     client.queue_declare(queue=master_q, durable=False)
 
     def callback(arg1, arg2):
@@ -517,7 +518,8 @@ def queue_listen():
         'update'
     ]
     '''
-    queues = [get_queue_name_from_hostname(s.hostname) for s in systems]
+    #queues = [get_queue_name_from_hostname(s.hostname) for s in systems]
+    queues = ['host-action']
 
 
 
