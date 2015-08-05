@@ -7,7 +7,7 @@ import pytest
 from flask import url_for
 
 
-from chorizoweb.user.models import User
+from moz_au_web.user.models import User
 from .factories import UserFactory
 
 

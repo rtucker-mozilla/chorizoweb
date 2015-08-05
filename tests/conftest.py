@@ -5,9 +5,9 @@ import os
 import pytest
 from webtest import TestApp
 
-from chorizoweb.settings import TestConfig
-from chorizoweb.app import create_app
-from chorizoweb.database import db as _db
+from moz_au_web.settings import TestConfig
+from moz_au_web.app import create_app
+from moz_au_web.database import db as _db
 
 from .factories import UserFactory
 

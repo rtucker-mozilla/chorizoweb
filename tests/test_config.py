@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from chorizoweb.app import create_app
-from chorizoweb.settings import ProdConfig, DevConfig
+from moz_au_web.app import create_app
+from moz_au_web.settings import ProdConfig, DevConfig
 
 def test_production_config():
     app = create_app(ProdConfig)

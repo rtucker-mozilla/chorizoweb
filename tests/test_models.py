@@ -4,7 +4,7 @@ import datetime as dt
 
 import pytest
 
-from chorizoweb.user.models import User, Role
+from moz_au_web.user.models import User, Role
 from .factories import UserFactory
 
 @pytest.mark.usefixtures('db')

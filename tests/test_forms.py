@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from chorizoweb.public.forms import LoginForm
-from chorizoweb.user.forms import RegisterForm
+from moz_au_web.public.forms import LoginForm
+from moz_au_web.user.forms import RegisterForm
 from .factories import UserFactory
 
 class TestRegisterForm:

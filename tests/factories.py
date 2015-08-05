@@ -2,8 +2,8 @@
 from factory import Sequence, PostGenerationMethodCall
 from factory.alchemy import SQLAlchemyModelFactory
 
-from chorizoweb.user.models import User
-from chorizoweb.database import db
+from moz_au_web.user.models import User
+from moz_au_web.database import db
 
 class BaseFactory(SQLAlchemyModelFactory):
 
