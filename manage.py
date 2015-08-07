@@ -6,10 +6,10 @@ import subprocess
 from flask.ext.script import Manager, Shell, Server
 from flask.ext.migrate import MigrateCommand
 
-from moz_au_web.app import create_app
-from moz_au_web.user.models import User
-from moz_au_web.settings import DevConfig, ProdConfig
-from moz_au_web.database import db
+from chorizoweb.app import create_app
+from chorizoweb.user.models import User
+from chorizoweb.settings import DevConfig, ProdConfig
+from chorizoweb.database import db
 
 if os.environ.get("MOZ_AU_WEB_ENV") == 'prod':
     app = create_app(ProdConfig)

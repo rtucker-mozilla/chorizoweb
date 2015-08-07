@@ -5,9 +5,9 @@ import pika
 from celery import Celery
 
 
-from moz_au_web.settings import ProdConfig
-from moz_au_web.assets import assets
-from moz_au_web.extensions import (
+from chorizoweb.settings import ProdConfig
+from chorizoweb.assets import assets
+from chorizoweb.extensions import (
     bcrypt,
     cache,
     db,
@@ -15,7 +15,7 @@ from moz_au_web.extensions import (
     migrate,
     debug_toolbar,
 )
-from moz_au_web import public, user, system, api
+from chorizoweb import public, user, system, api
 
 def create_app(config_object=ProdConfig):
     '''An application factory, as explained here:

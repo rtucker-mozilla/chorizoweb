@@ -2,9 +2,9 @@ from celery import Celery
 import os
 from flask import Flask, current_app
 import pika
-from moz_au_web.settings import ProdConfig, DevConfig
-from moz_au_web.extensions import db
-from moz_au_web.system.models import System, SystemPing, SystemPong
+from chorizoweb.settings import ProdConfig, DevConfig
+from chorizoweb.extensions import db
+from chorizoweb.system.models import System, SystemPing, SystemPong
 import datetime
 ENV = os.environ.get('ENV', False)
 if ENV == 'DEV':

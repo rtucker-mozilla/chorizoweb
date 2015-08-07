@@ -5,8 +5,8 @@ import hashlib
 import json
 
 
-from moz_au_web.extensions import bcrypt
-from moz_au_web.database import (
+from chorizoweb.extensions import bcrypt
+from chorizoweb.database import (
     Column,
     db,
     Model,
