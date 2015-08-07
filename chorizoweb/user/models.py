@@ -3,8 +3,8 @@ import datetime as dt
 
 from flask.ext.login import UserMixin
 
-from chorizoweb.extensions import bcrypt
-from chorizoweb.database import (
+from moz_au_web.extensions import bcrypt
+from moz_au_web.database import (
     Column,
     db,
     Model,

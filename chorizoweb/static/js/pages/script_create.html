@@ -1,0 +1,22 @@
+<ul ng-init="init(5)" class="breadcrumb">
+    <li><a href="#">Home</a></li>
+    <li><a href="/#/scripts/">Scripts List</a></li>
+    <li>{{ hostname }}</li>
+</ul>
+<div>
+<div ng-bind-html="success_message">
+</div>
+</div>
+<div class="col-md-6">
+	<form>
+	    <div class="form-group">
+	        <label style="padding-right: 5px;" for="file_name">Filename:</label><input class="form-control" type="text" ng-model="file_name" id="file_name" />
+	    </div>
+	    <div class="form-group">
+		    <label style="padding-right: 5px;" for="description">Description:</label><textarea rows="8" class="form-control" ng-model="description" id="description" ></textarea>
+	    </div>
+	    <div class="form-group">
+	        <button ng-click="create()" class="btn btn-primary">Create Script</button>
+	    </div>
+	</form>
+</div>

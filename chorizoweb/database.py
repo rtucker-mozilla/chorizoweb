@@ -29,6 +29,9 @@ class CRUDMixin(object):
             setattr(self, attr, value)
         return commit and self.save() or self
 
+    def refresh(self):
+        db.session.refresh(self)
+
     def save(self, commit=True):
         """Save the record."""
         db.session.add(self)

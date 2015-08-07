@@ -11,7 +11,7 @@
         </thead>
         <tbody>
         <tr ng-repeat="system in systems | filter:query">
-            <td><a href="#updates/{{ system.hostname }}">{{ system.hostname }}</a></td>
+            <td><a href="#detail/{{ system.hostname }}">{{ system.hostname }}</a></td>
         </tr>
         </tbody>
     </table>
@@ -30,7 +30,7 @@
             <td>
                 {{ update.created_at }}
             </td>
-            <td><a href="#updates/{{ update.hostname }}">{{ update.hostname }}</a></td>
+            <td><a href="#detail/{{ update.hostname }}">{{ update.hostname }}</a></td>
             <td>
                 {{ update.return_code }}
             </td>

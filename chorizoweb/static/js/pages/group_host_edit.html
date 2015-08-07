@@ -1,0 +1,84 @@
+<ul  class="breadcrumb">
+    <li><a href="#">Home</a></li>
+    <li><a href="#groups/detail/{{ id }}/">Group Detail</a></li>
+</ul>
+<h1 ng-init="init()" ng-controller="GroupHostEditCtrl">Configure Hosts</h1>
+<div ng-bind="s_group.group_name"></div>
+
+<div class="col-md-8 alert alert-success">
+    <strong>Instructions:</strong>
+    Drag the hosts from the available hosts box to the installed hosts box. You can control the order as well. The top host runs first.
+</div>
+<div class="col-md-8">
+    <div class="row">
+        <button class="btn btn-primary" ng-click="save()">Save</button><br /><br />
+    </div>
+</div>
+
+<div class="simpleDemo row">
+
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Enabled Hosts</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul dnd-list="models.lists.Enabled_Hosts">
+                            <!-- The dnd-draggable directive makes an element draggable and will
+                                 transfer the object that was assigned to it. If an element was
+                                 dragged away, you have to remove it from the original list
+                                 yourself using the dnd-moved attribute -->
+                            <li ng-repeat="item in models.lists.Enabled_Hosts"
+                                style="cursor: pointer;"
+                                dnd-draggable="item"
+                                dnd-moved="models.lists.Enabled_Hosts.splice($index, 1)"
+                                dnd-effect-allowed="move"
+                                dnd-selected="models.selected = item"
+                                ng-class="{'selected': models.selected === item}"
+                                >
+                                {{item.label}}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Available Hosts</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul dnd-list="models.lists.Available_Hosts">
+                            <!-- The dnd-draggable directive makes an element draggable and will
+                                 transfer the object that was assigned to it. If an element was
+                                 dragged away, you have to remove it from the original list
+                                 yourself using the dnd-moved attribute -->
+                            <li style="cursor: pointer;" ng-repeat="item in models.lists.Available_Hosts"
+                                dnd-draggable="item"
+                                dnd-moved="models.lists.Available_Hosts.splice($index, 1)"
+                                dnd-effect-allowed="move"
+                                dnd-selected="models.selected = item"
+                                ng-class="{'selected': models.selected === item}"
+                                >
+                                {{item.label}}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!--<div ng-repeat="(listName, list) in models.lists" class="col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{listName}}</h3>
+                    </div>
+                    <div class="panel-body" ng-include="'/static/js/pages/simple.html'"></div>
+                </div>
+            </div>-->
+        </div>
+
+        <div view-source="simple"></div>
+
+    </div>
+</div>

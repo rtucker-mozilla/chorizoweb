@@ -4,9 +4,10 @@ import os
 os_env = os.environ
 
 class Config(object):
-    CHORIZO_WEB_SECRET = 'long random secrete goes here'
-    SECRET_KEY = CHORIZO_WEB_SECRET
-    #SECRET_KEY = os_env['CHORIZO_WEB_SECRET']  # TODO: Change me
+    MOZ_AU_WEB_SECRET = '<proper_secret_here>'
+    SQLALCHEMY_DATABASE_URI = 'mysql://<mysql_username>:<mysql_password>@localhost/moz_au'
+    SECRET_KEY = MOZ_AU_WEB_SECRET
+    #SECRET_KEY = os_env['MOZ_AU_WEB_SECRET']  # TODO: Change me
     APP_DIR = os.path.abspath(os.path.dirname(__file__))  # This directory
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
     BCRYPT_LOG_ROUNDS = 13
@@ -14,14 +15,43 @@ class Config(object):
     DEBUG_TB_ENABLED = False  # Disable Debug toolbar
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
+    RABBITMQ_HOST = '127.0.0.1'
+    RABBITMQ_PORT = 5671
+    RABBITMQ_USER = '<rabbitmq_user>'
+    RABBITMQ_PASS = '<rabbitmq_pass>'
+    RABBITMQ_EXCHANGE = 'chorizo'
+    RABBITMQ_TLS = True
+    CELERY_BROKER_URL = "amqp://%s:%s" % (RABBITMQ_HOST, RABBITMQ_PORT)   
+    CELERY_RESULT_BACKEND = "amqp://%s:%s" % (RABBITMQ_HOST, RABBITMQ_PORT)   
+    DEBUG = True
 
 
 class ProdConfig(Config):
     """Production configuration."""
     ENV = 'prod'
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'mysql://<username>:<password>@<db_host>/<db_name>'
+    SQLALCHEMY_DATABASE_URI = 'mysql://moz_au:moz_au@localhost/moz_au'
+    ASSETS_DEBUG = True  # Don't bundle/minify static assets
     DEBUG_TB_ENABLED = False  # Disable Debug toolbar
+    RABBITMQ_HOST = '<rabbitmq_host>'
+    RABBITMQ_PORT = 5672
+    RABBITMQ_USER = '<rabbitmq_user>'
+    RABBITMQ_PASS = '<rabbitmq_pass>'
+    RABBITMQ_EXCHANGE = 'chorizo'
+    RABBITMQ_TLS = False
+    RABBITMQ_URI_SCHEME = 'amqp'
+    if RABBITMQ_TLS == True:
+        RABBITMQ_URI_SCHEME = 'amqps'
+
+    AMQP_URL = "%s://%s:%s@%s:%s/" % (
+        RABBITMQ_URI_SCHEME,
+        RABBITMQ_USER,
+        RABBITMQ_PASS,
+        RABBITMQ_HOST,
+        RABBITMQ_PORT,
+    )
+    CELERY_BROKER_URL = AMQP_URL
+    CELERY_RESULT_BACKEND = AMQP_URL
 
 
 class DevConfig(Config):
@@ -31,10 +61,30 @@ class DevConfig(Config):
     DB_NAME = 'dev.db'
     # Put the db file in project root
     DB_PATH = os.path.join(Config.PROJECT_ROOT, DB_NAME)
-    SQLALCHEMY_DATABASE_URI = 'mysql://<username>:<password>@<db_host>/<db_name>'
+    SQLALCHEMY_DATABASE_URI = 'mysql://<mysql_username>:<mysql_password>@localhost/moz_au'
     DEBUG_TB_ENABLED = True
     ASSETS_DEBUG = True  # Don't bundle/minify static assets
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
+    #RABBITMQ_HOST = 'chorizo.private.scl3.mozilla.com'
+    RABBITMQ_HOST = '<rabbitmq_host>'
+    RABBITMQ_PORT = 5672
+    RABBITMQ_USER = '<rabbitmq_user>'
+    RABBITMQ_PASS = '<rabbitmq_pass>'
+    RABBITMQ_EXCHANGE = 'chorizo'
+    RABBITMQ_TLS = False
+    RABBITMQ_URI_SCHEME = 'amqp'
+    if RABBITMQ_TLS == True:
+        RABBITMQ_URI_SCHEME = 'amqp'
+
+    AMQP_URL = "%s://%s:%s@%s:%s/" % (
+        RABBITMQ_URI_SCHEME,
+        RABBITMQ_USER,
+        RABBITMQ_PASS,
+        RABBITMQ_HOST,
+        RABBITMQ_PORT,
+    )
+    CELERY_BROKER_URL = AMQP_URL
+    CELERY_RESULT_BACKEND = AMQP_URL
 
 
 class TestConfig(Config):

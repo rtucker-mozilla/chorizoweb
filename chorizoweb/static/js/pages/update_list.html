@@ -1,8 +1,52 @@
 <ul ng-init="init(5)" class="breadcrumb">
     <li><a href="#">Home</a></li>
-    <li>Recent Updates</li>
+    <li>{{ system.hostname }}</li>
 </ul>
-<div ng-if="updates.length == 0 && has_loaded = true">
+<div>
+    <dt>Hostname: <dd>{{ system.hostname }}</dd></dt>
+    <div ng-if="system.groups.length > 0">
+        <dt>Groups
+            <dd ng-repeat="group in system.groups"><a href="#/groups/detail/{{ group.id}}/">{{ group.group_name }}</a>
+        </dt>
+    </div>
+
+</div>
+<div style="margin-top: 5px;">
+    <button class='btn btn-primary' ng-click="ping()">Ping Host</button>
+
+</div>
+<div style="margin-top: 5px;">
+    <button class='btn btn-primary' ng-click="start_update()">Update Host Now</button>
+
+</div>
+<div ng-if="pings.length == 0 && has_loaded == true">
+    <h3>No Pings for System</h3>
+</div>
+<div ng-if="pings.length > 0 && has_loaded == true">
+    <h3>Pings for System</h3>
+</div>
+<table style="margin-top: 55px;" ng-if="pings.length > 0" class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Success</th>
+        <th>Ping Start</th>
+        <th>Ping Response</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="ping in pings">
+        <td>{{ ping.id }}</td>
+        <td>
+            <span ng-if="ping.success == 1">True</span>
+            <span ng-if="ping.success == 0">False</span>
+        </td>
+        <td>{{ ping.ping_time }}</td>
+        <td>{{ ping.pong_time }}</td>
+    </tr>
+    </tbody>
+</table>
+<div ng-if="updates.length == 0 && has_loaded == true">
     <h3>No Updates for System</h3>
 </div>
 <table style="margin-top: 55px;" ng-if="updates.length > 0" class="table table-bordered table-striped">

@@ -4,12 +4,12 @@ from flask import (Blueprint, request, render_template, flash, url_for,
                     redirect, session)
 from flask.ext.login import login_user, login_required, logout_user
 
-from chorizoweb.extensions import login_manager
-from chorizoweb.user.models import User
-from chorizoweb.public.forms import LoginForm
-from chorizoweb.user.forms import RegisterForm
-from chorizoweb.utils import flash_errors
-from chorizoweb.database import db
+from moz_au_web.extensions import login_manager
+from moz_au_web.user.models import User
+from moz_au_web.public.forms import LoginForm
+from moz_au_web.user.forms import RegisterForm
+from moz_au_web.utils import flash_errors
+from moz_au_web.database import db
 
 blueprint = Blueprint('public', __name__, static_folder="../static")
 
